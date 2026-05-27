@@ -1,0 +1,436 @@
+import React, { useState, useEffect } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CRow,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CButton,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CBadge,
+  CCallout,
+  CSpinner
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilCloudDownload, cilGraph, cilWarning, cilChartPie } from '@coreui/icons'
+import axios from 'axios'
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js'
+import { Line, Scatter } from 'react-chartjs-2'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+)
+
+const AnalisisLaporan = () => {
+  const [activeTab, setActiveTab] = useState('forecast')
+  
+  // State untuk Cash Flow Forecast
+  const [dataAI, setDataAI] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState(null)
+
+  // State Khusus untuk BCG Matrix
+  const [dataBCGResponse, setDataBCGResponse] = useState(null)
+  const [loadingBCG, setLoadingBCG] = useState(false)
+  const [errorBCG, setErrorBCG] = useState(null)
+
+  // Helper Pembersihan Token JWT
+  const getCleanToken = () => {
+    const tokenRaw = localStorage.getItem('accessToken')
+    if (!tokenRaw) return null
+    return tokenRaw.replace(/^"(.*)"$/, '$1')
+  }
+
+  // =========================================================================
+  // 📡 INTERAKSI API 1: Cash Flow Forecast
+  // =========================================================================
+  const ambilDataForecastAI = async () => {
+    setLoading(true)
+    setErrorMsg(null)
+    try {
+      const tokenBersih = getCleanToken()
+      if (!tokenBersih) {
+        setErrorMsg('Sesi login tidak ditemukan. Silakan logout lalu login kembali.')
+        return
+      }
+
+      const respon = await axios.get('http://localhost:5000/api/ai/cashflow-forecast', {
+        headers: { 'Authorization': `Bearer ${tokenBersih}` }
+      });
+
+      const dataFinal = respon.data.data || respon.data
+      setDataAI(dataFinal) 
+    } catch (err) {
+      console.error('Gagal mengambil ramalan AI:', err)
+      setErrorMsg(err.response?.data?.message || 'Gagal memverifikasi akses autentikasi.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // =========================================================================
+  // 📡 INTERAKSI API 2: HIT API ROUTER BCG MATRIX
+  // =========================================================================
+  const ambilDataBCG = async () => {
+    setLoadingBCG(true)
+    setErrorBCG(null)
+    try {
+      const tokenBersih = getCleanToken()
+      if (!tokenBersih) {
+        setErrorBCG('Sesi login tidak ditemukan.')
+        return
+      }
+
+      const respon = await axios.get('http://localhost:5000/api/ai/bcg-matrix', {
+        headers: { 'Authorization': `Bearer ${tokenBersih}` },
+        validateStatus: (status) => {
+          return (status >= 200 && status < 300) || status === 400;
+        }
+      });
+
+      if (respon.status === 400) {
+        setErrorBCG(respon.data.message || 'Anda belum memiliki data produk.');
+        setLoadingBCG(false);
+        return; // Stop proses agar tidak lanjut ke mapping data
+      }
+      // Ambil payload terdalam (biasanya respon.data.data dari utility response BE)
+      const dataFinal = respon.data.data || respon.data
+      if (Array.isArray(dataFinal)) {
+        setDataBCGResponse({ produk: dataFinal })
+      } else {
+        setDataBCGResponse(dataFinal)
+      }
+    } catch (err) {
+      console.error('Gagal mengambil analisis BCG:', err)
+      setErrorBCG(err.response?.data?.message || 'Gagal memuat analisis BCG Matrix.')
+    } finally {
+      setLoadingBCG(false)
+    }
+  }
+
+  // Trigger effect perpindahan tab
+  useEffect(() => {
+    if (activeTab === 'forecast') {
+      ambilDataForecastAI()
+    } else if (activeTab === 'bcg') {
+      ambilDataBCG()
+    }
+  }, [activeTab])
+
+  // Penyederhanaan status biner untuk Forecast
+  const getStatusAnalisis = (status) => {
+    if (status === 'positif') return { color: 'success', label: 'POSITIF' };
+    return { color: 'danger', label: 'NEGATIF' };
+  };
+
+  const statusObj = dataAI ? getStatusAnalisis(dataAI.status) : { color: 'secondary', label: 'Menunggu' };
+
+  const handleUnduhLaporan = () => {
+    alert('Fitur Unduh Laporan PDF sedang menyiapkan ringkasan analisis finansial warung... 📄📥')
+  }
+
+  // =========================================================================
+  // 📈 KONFIGURASI GRAFIK 1: Cash Flow Forecast
+  // =========================================================================
+  const nilaiPrediksiBesok = dataAI && dataAI.prediksi_cashflow_besok ? parseFloat(dataAI.prediksi_cashflow_besok) : 0;
+  const dataHistorisRiil = dataAI && dataAI.historis_30_hari 
+    ? dataAI.historis_30_hari.slice(-4).map(val => parseFloat(val) || 0)
+    : [0, 0, 0, 0];
+
+  const dataForecast = {
+    labels: ['Hari Ini - 3', 'Hari Ini - 2', 'Hari Ini - 1', 'Hari Ini', 'BESOK (Prediksi AI)'],
+    datasets: [
+      {
+        label: 'Net Cash Flow Realistis & Prediksi (Rp)',
+        data: [...dataHistorisRiil, nilaiPrediksiBesok],
+        borderColor: dataAI?.status === 'negatif' ? '#e55353' : '#2eb85c', 
+        backgroundColor: dataAI?.status === 'negatif' ? 'rgba(229, 83, 83, 0.1)' : 'rgba(46, 184, 92, 0.1)',
+        tension: 0.3,
+        pointRadius: 6,
+        pointBackgroundColor: ['#636f83', '#636f83', '#636f83', '#636f83', '#39f'],
+      }
+    ]
+  }
+
+  const opsiForecast = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: { callbacks: { label: (ctx) => `Net Arus Kas: Rp ${ctx.raw.toLocaleString('id-ID')}` } }
+    },
+    scales: {
+      y: { ticks: { callback: (val) => `Rp ${val.toLocaleString('id-ID')}` } }
+    }
+  }
+
+  // =========================================================================
+  // 📊 KONFIGURASI GRAFIK 2: BCG Matrix Dinamis
+  // =========================================================================
+  const listProdukBCG = dataBCGResponse?.produk || []
+
+  const getProdukPerKuadran = (kuadran) => {
+    return listProdukBCG
+      .filter(item => {
+        const teksKuadran = String(item.kuadran || '').toLowerCase();
+        return teksKuadran.includes(kuadran.toLowerCase());
+      })
+      .map((item) => ({
+        x: Number(item.qty_terjual || 0), // Sumbu X riil: Qty terjual dari DB/AI
+        y: Number(item.margin_pct || 0),  // Sumbu Y riil: Margin persen dari AI
+        label: item.nama_produk
+      }))
+  }
+
+  const dataBCG = {
+    datasets: [
+      { label: 'Stars (Andalan Laris)', data: getProdukPerKuadran('star'), backgroundColor: '#2eb85c', pointRadius: 10 },
+      { label: 'Cash Cows (Sapi Perah)', data: getProdukPerKuadran('cash cow'), backgroundColor: '#39f', pointRadius: 10 },
+      { label: 'Question Marks (Potensial)', data: getProdukPerKuadran('question mark'), backgroundColor: '#f9b115', pointRadius: 10 },
+      { label: 'Dogs (Kurang Laku)', data: getProdukPerKuadran('dog'), backgroundColor: '#e55353', pointRadius: 10 }
+    ]
+  }
+
+  // 🔥 PERBAIKAN SINKRONISASI 2: Label Sumbu dan Garis Potong Tengah disesuaikan dengan Notebook DS
+  // Cari nilai tertinggi untuk dinamisasi batas maksimum chart
+  const maxQtyData = Math.max(...listProdukBCG.map(p => p.qty_terjual || 100), 100);
+  const maxMarginData = Math.max(...listProdukBCG.map(p => p.margin_pct || 50), 50);
+
+  // Ambil nilai median (jika BE mengirimkannya), atau gunakan nilai default rata-rata tengah warung
+  const thresholdX = dataBCGResponse?.median_qty || (maxQtyData / 2);
+  const thresholdY = dataBCGResponse?.median_margin || (maxMarginData / 2);
+
+const opsiBCG = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          // Tooltip dipercantik agar menampilkan info bisnis yang informatif saat titik di-hover
+          label: (ctx) => `${ctx.raw.label} (${ctx.dataset.label}) -> Qty: ${ctx.raw.x} pcs, Margin: ${ctx.raw.y}%`
+        }
+      }
+    },
+    scales: {
+      x: { 
+        min: 0, 
+        max: maxQtyData + 20, 
+        title: { display: true, text: 'Volume Penjualan (Qty Terjual pcs)' }, 
+        grid: { 
+          // Menggambar garis cross vertikal tepat di angka Median target DS
+          color: (ctx) => (ctx.tick.value >= thresholdX - 5 && ctx.tick.value <= thresholdX + 5 ? '#636f83' : 'rgba(0,0,0,0.05)'), 
+          lineWidth: (ctx) => (ctx.tick.value >= thresholdX - 5 && ctx.tick.value <= thresholdX + 5 ? 2 : 1) 
+        } 
+      },
+      y: { 
+        min: 0, 
+        max: maxMarginData + 10, 
+        title: { display: true, text: 'Margin Keuntungan (Margin %)' }, 
+        grid: { 
+          // Menggambar garis cross horizontal tepat di angka Median target DS
+          color: (ctx) => (ctx.tick.value >= thresholdY - 2 && ctx.tick.value <= thresholdY + 2 ? '#636f83' : 'rgba(0,0,0,0.05)'), 
+          lineWidth: (ctx) => (ctx.tick.value >= thresholdY - 2 && ctx.tick.value <= thresholdY + 2 ? 2 : 1) 
+        } 
+      }
+    }
+  }
+  
+  const getBadgeColorBCG = (kuadran) => {
+    const text = String(kuadran || '').toLowerCase();
+    if (text.includes('star')) return 'success';
+    if (text.includes('cow')) return 'info';
+    if (text.includes('question')) return 'warning';
+    if (text.includes('dog')) return 'danger';
+    return 'secondary';
+  }
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className="mb-4 shadow-sm">
+          <CCardHeader className="d-flex justify-content-between align-items-center py-3 bg-body-tertiary text-body border-bottom">
+            <h5 className="fw-bold mb-0">Pusat Analisis & Laporan AI</h5>
+            <CButton color="primary" size="sm" className="d-flex align-items-center gap-2" onClick={handleUnduhLaporan}>
+              <CIcon icon={cilCloudDownload} /> Unduh Laporan Ringkas
+            </CButton>
+          </CCardHeader>
+
+          <CCardBody className="p-4">
+            <CNav variant="tabs" className="mb-4 border-bottom-0">
+              <CNavItem>
+                <CNavLink href="#" active={activeTab === 'forecast'} onClick={(e) => { e.preventDefault(); setActiveTab('forecast') }} className="d-flex align-items-center gap-2">
+                  <CIcon icon={cilGraph} className="text-primary" /> Cash Flow Forecast
+                </CNavLink>
+              </CNavItem>
+              <CNavItem>
+                <CNavLink href="#" active={activeTab === 'anomaly'} onClick={(e) => { e.preventDefault(); setActiveTab('anomaly') }} className="d-flex align-items-center gap-2">
+                  <CIcon icon={cilWarning} className="text-danger" /> Anomaly Alert
+                </CNavLink>
+              </CNavItem>
+              <CNavItem>
+                <CNavLink href="#" active={activeTab === 'bcg'} onClick={(e) => { e.preventDefault(); setActiveTab('bcg') }} className="d-flex align-items-center gap-2">
+                  <CIcon icon={cilChartPie} className="text-warning" /> BCG Matrix
+                </CNavLink>
+              </CNavItem>
+            </CNav>
+
+            <div className="tab-content-wrapper mt-2">
+              {/* TAB 1: CASH FLOW FORECAST */}
+              {activeTab === 'forecast' && (
+                <div>
+                  <h6 className="fw-bold text-body mb-1">Prediksi Arus Kas Mingguan (Time Series Model)</h6>
+                  <p className="text-body-secondary small mb-4">Proyeksi pemasukan dan pengeluaran warung berdasarkan historis transaksi harian.</p>
+                  
+                  {loading && <div className="text-center my-4"><CSpinner color="primary" /><p className="small text-muted mt-2">Model LSTM sedang menerawang transaksi warungmu...</p></div>}
+                  {errorMsg && <CCallout color="danger" className="my-3">{errorMsg}</CCallout>}
+
+                  {dataAI && !loading && (
+                    <CCallout color={statusObj.color} className="bg-body-tertiary mb-4">
+                      <div className={`fw-bold text-${statusObj.color} mb-1`}>
+                        🔮 Hasil Analisis Prediksi AI untuk Besok Hari
+                      </div>
+                      <span className="text-body">
+                        Besok diestimasikan kas warungmu bernilai <strong className="text-primary">Rp {dataAI.prediksi_cashflow_besok?.toLocaleString('id-ID')}</strong> 
+                        dengan status performa <CBadge color={statusObj.color}>{statusObj.label}</CBadge>.
+                        {dataAI.peringatan && <div className="mt-2 text-body small"><strong>💡 Catatan Penting:</strong> {dataAI.peringatan}</div>}
+                      </span>
+                    </CCallout>
+                  )}
+
+                  <div className="bg-body p-3 rounded border mb-4 shadow-sm" style={{ height: '320px' }}>
+                    <Line data={dataForecast} options={opsiForecast} />
+                  </div>
+
+                  <CTable align="middle" hover bordered responsive>
+                    <CTableHead color="light">
+                      <CTableRow>
+                        <CTableHeaderCell>Periode Hari</CTableHeaderCell>
+                        <CTableHeaderCell>Proyeksi Kas Bersih Akhir</CTableHeaderCell>
+                        <CTableHeaderCell>Status Finansial</CTableHeaderCell>
+                      </CTableRow>
+                    </CTableHead>
+                    <CTableBody className="text-body">
+                      <CTableRow>
+                        <CTableDataCell className="fw-medium">Besok Hari</CTableDataCell>
+                        <CTableDataCell className={dataAI?.status === 'negatif' ? 'text-danger fw-bold' : 'text-success fw-bold'}>
+                          Rp {dataAI ? dataAI.prediksi_cashflow_besok?.toLocaleString('id-ID') : '0'}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CBadge color={dataAI?.status === 'negatif' ? 'danger' : 'success'}>
+                            {dataAI ? dataAI.status.toUpperCase() : 'Menunggu'}
+                          </CBadge>
+                        </CTableDataCell>
+                      </CTableRow>
+                    </CTableBody>
+                  </CTable>
+                </div>
+              )}
+
+              {/* TAB 2: ANOMALY ALERT */}
+              {activeTab === 'anomaly' && (
+                <div>
+                  <h6 className="fw-bold text-body mb-1">Notifikasi Otomatis Anomali & Kecurangan Kasir</h6>
+                  <p className="text-body-secondary small mb-4">Sistem mendeteksi transaksi tidak wajar, lonjakan pengeluaran mendadak, atau potensi fraud di warung.</p>
+                  
+                  <CCallout color="danger" className="bg-body-tertiary mb-3">
+                    <div className="fw-bold text-danger d-flex align-items-center gap-2 mb-1"><CIcon icon={cilWarning} style={{ width: '18px' }} /> Terdeteksi Kebocoran Margin Profit Produk</div>
+                    <span className="text-body small">Produk <strong className="text-body">Permen Kaki</strong> terdeteksi salah input harga. Harga Jual (Rp 1.996) hampir menyamai atau di bawah batas margin aman COGS. Segera periksa modul Produk.</span>
+                  </CCallout>
+                </div>
+              )}
+
+              {/* TAB 3: BCG MATRIX */}
+              {activeTab === 'bcg' && (
+                <div>
+                  <h6 className="fw-bold text-body mb-1">Profitability Dashboard: Pemetaan Klasifikasi BCG Matrix</h6>
+                  <p className="text-body-secondary small mb-4">Produk warung dikelompokkan secara visual ke dalam 4 zona (Star, Cash Cow, Question Mark, Dog) berdasarkan volume perputaran kuantitas produk terjual.</p>
+                  
+                  {loadingBCG && <div className="text-center my-4"><CSpinner color="warning" /><p className="small text-muted mt-2">AI sedang mengelompokkan profitabilitas produk UMKM-mu...</p></div>}
+                  {errorBCG && <CCallout color="danger" className="my-3">{errorBCG}</CCallout>}
+
+                  {/* Tampilan Visual Grafik Scatter */}
+                  {!loadingBCG && !errorBCG && (
+                    <>
+                      <div className="bg-body p-3 rounded border mb-4 shadow-sm" style={{ height: '350px' }}>
+                        <Scatter data={dataBCG} options={opsiBCG} />
+                      </div>
+
+                      {/* Tabel Detail Produk Hasil Olahan BCG Matrix */}
+                      <h6 className="fw-bold text-body mt-4 mb-2">Detail Tabel Klasifikasi Produk</h6>
+                      <CTable align="middle" hover bordered responsive>
+                        <CTableHead color="light">
+                          <CTableRow>
+                            <CTableHeaderCell>ID Produk</CTableHeaderCell>
+                            <CTableHeaderCell>Nama Produk</CTableHeaderCell>
+                            <CTableHeaderCell>Qty Terjual</CTableHeaderCell>
+                            <CTableHeaderCell>Harga Jual</CTableHeaderCell>
+                            <CTableHeaderCell>Zona Kuadran BCG</CTableHeaderCell>
+                            <CTableHeaderCell>Rekomendasi</CTableHeaderCell>
+                          </CTableRow>
+                        </CTableHead>
+                        <CTableBody className="text-body">
+                          {listProdukBCG.length > 0 ? (
+                            listProdukBCG.map((prod, index) => (
+                              <CTableRow key={index}>
+                                <CTableDataCell>{prod.id_produk}</CTableDataCell>
+                                <CTableDataCell className="fw-medium">{prod.nama_produk}</CTableDataCell>
+                                <CTableDataCell>{prod.qty_terjual} pcs</CTableDataCell>
+                                <CTableDataCell>
+                                  Rp {(prod.harga_jual || 0).toLocaleString('id-ID')}
+                                </CTableDataCell>
+                                <CTableDataCell>
+                                  <CBadge color={getBadgeColorBCG(prod.kuadran)}>
+                                    {(prod.kuadran || 'UNKNOWN').toUpperCase()}
+                                  </CBadge>
+                                </CTableDataCell>
+                                <CTableDataCell>
+                                  {prod.rekomendasi || <span className="text-muted italic">-</span>}
+                                </CTableDataCell>
+                              </CTableRow>
+                            ))
+                          ) : (
+                            <CTableRow>
+                              <CTableDataCell colSpan="6" className="text-center text-muted small py-3">
+                                Tidak ada data analisis produk yang tersedia.
+                              </CTableDataCell>
+                            </CTableRow>
+                          )}
+                        </CTableBody>
+                      </CTable>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default AnalisisLaporan
