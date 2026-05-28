@@ -78,7 +78,7 @@ const AnalisisLaporan = () => {
         return
       }
 
-      const respon = await axios.get('http://localhost:5000/api/ai/cashflow-forecast', {
+      const respon = await axios.get('/ai/cashflow-forecast', {
         headers: { 'Authorization': `Bearer ${tokenBersih}` }
       });
 
@@ -105,7 +105,7 @@ const AnalisisLaporan = () => {
         return
       }
 
-      const respon = await axios.get('http://localhost:5000/api/ai/bcg-matrix', {
+      const respon = await axios.get('/ai/bcg-matrix', {
         headers: { 'Authorization': `Bearer ${tokenBersih}` },
         validateStatus: (status) => {
           return (status >= 200 && status < 300) || status === 400;
