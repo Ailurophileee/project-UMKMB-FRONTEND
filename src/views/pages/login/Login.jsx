@@ -31,7 +31,8 @@ const Login = () => {
     setLoginData((prev) => ({ ...prev, [name]: value }))
   }
 
-  //Ubah fungsi ini menjadi async untuk memproses AJAX kiriman login
+  const [loginError, setLoginError] = useState(null);
+  //untuk memproses AJAX kiriman login
   const handleLoginSubmit = async (e) => {
     e.preventDefault()
 
@@ -41,9 +42,9 @@ const Login = () => {
     }
 
     try {
-      console.log('Mengirim kredensial login ke BE:', payload)
+      //console.log('Mengirim kredensial login ke BE:', payload)
       
-      // 1. Tembak rute autentikasi milik backend kamu
+      // 1. Tembak rute autentikasi milik backends
       const response = await API.post('/authentication', payload)
       
       // 2. Ambil token murni dari struktur respons response.data.data
@@ -52,17 +53,19 @@ const Login = () => {
       // 3. Simpan token JWT ke dalam amunisi localStorage browser
       localStorage.setItem('accessToken', token)
       
-      alert('Login berhasil!')
+     // alert('Login berhasil!')
       
-      // 4. Lempar user langsung masuk meluncur ke halaman dasbor keuangan
+      // 4. Lempar user langsung masuk ke halaman dashboard
       navigate('/dashboard')
       
     } catch (error) {
-      console.error('Error saat login:', error)
-      // Tangkap pesan eror asli yang dilempar dari penanganan Exception backend kamu
-      alert(error.response?.data?.message || 'Gagal masuk. Periksa kembali username dan password kamu!')
+      //console.error('Error saat login:', error)
+      const pesanError = error.response?.data?.message || 'Gagal masuk. Periksa kembali username dan password kamu!';
+      setLoginError(pesanError);
     }
   }
+
+  
 
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
@@ -71,13 +74,20 @@ const Login = () => {
           <CCol md={9} lg={8} xl={7}>
             <CCardGroup>
               
-              {/* ================= SISI KIRI: FORM LOGIN ================= */}
+              {/* ===FORM LOGIN ==== */}
               <CCard className="p-4">
                 <CCardBody>
                   <CForm onSubmit={handleLoginSubmit}>
                     <h2 className="fw-bold text-dark mb-1">Login</h2>
-                    <p className="text-muted mb-4">Masuk ke dasbor keuangan warung kamu</p>
-                    
+                    <p className="text-muted mb-4">Masuk ke dashboard keuangan warung kamu</p>
+                    {loginError && (
+                      <div className="alert alert-danger p-2 small mb-3 border-start border-danger border-3 rounded-1 d-flex align-items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-exclamatation-triangle-fill text-danger flex-shrink-0" viewBox="0 0 16 16">
+                          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                        </svg>
+                        <div>{loginError}</div>
+                      </div>
+                    )}
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
@@ -116,8 +126,8 @@ const Login = () => {
                 </CCardBody>
               </CCard>
               
-              {/* ================= SISI KANAN: AJAKAN DAFTAR ================= */}
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
+              {/* ==== AJAKAN DAFTAR === */}
+              <CCard className="text-white bg-primary py-5" style={{ minHeight: '100%' }}>
                 <CCardBody className="text-center d-flex align-items-center justify-content-center">
                   <div>
                     <h3 className="fw-bold mb-2">Belum Punya Akun?</h3>
@@ -125,14 +135,13 @@ const Login = () => {
                       Daftarkan diri dan usaha warung kamu sekarang untuk menikmati analisis keuangan berbasis kecerdasan buatan.
                     </p>
                     <Link to="/register">
-                      <CButton color="light" className="mt-3 active fw-bold text-primary" tabIndex={-1}>
+                      <CButton color="light" className="mt-3 active fw-bold text-primary w-100 w-md-auto" tabIndex={-1}>
                         Daftar Warung Baru
                       </CButton>
                     </Link>
                   </div>
                 </CCardBody>
               </CCard>
-
             </CCardGroup>
           </CCol>
         </CRow>
