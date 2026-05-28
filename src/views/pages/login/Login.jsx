@@ -35,28 +35,32 @@ const Login = () => {
   //untuk memproses AJAX kiriman login
   const handleLoginSubmit = async (e) => {
     e.preventDefault()
-
+    setLoginError(null)
     const payload = {
       username: loginData.username,
       password: loginData.password,
     }
 
     try {
-      //console.log('Mengirim kredensial login ke BE:', payload)
-      
-      // 1. Tembak rute autentikasi milik backends
+      // 2. Amankan LocalStorage: hapus sisa-sisa token lama agar tidak mengganggu auth
+      localStorage.removeItem('accessToken')
+
+      // 3. Tembak rute autentikasi milik backend
       const response = await API.post('/authentication', payload)
       
-      // 2. Ambil token murni dari struktur respons response.data.data
-      const token = response.data.data.accessToken
-      
-      // 3. Simpan token JWT ke dalam amunisi localStorage browser
-      localStorage.setItem('accessToken', token)
-      
-     // alert('Login berhasil!')
-      
-      // 4. Lempar user langsung masuk ke halaman dashboard
-      navigate('/dashboard')
+      // 4. Validasi isi data respons (Antisipasi jika BE mengirim status 200 tapi isinya gagal)
+      const token = response?.data?.data?.accessToken
+
+      if (token) {
+        // 5. Simpan token JWT murni ke dalam localStorage
+        localStorage.setItem('accessToken', token)
+        
+        // 6. Lempar user masuk ke halaman dashboard HANYA jika token sukses didapatkan
+        navigate('/dashboard')
+      } else {
+        // Jika status sukses tapi token tidak dikirim oleh BE
+        setLoginError(response?.data?.message || 'Gagal mengambil akses token dari server.')
+      }
       
     } catch (error) {
       //console.error('Error saat login:', error)
