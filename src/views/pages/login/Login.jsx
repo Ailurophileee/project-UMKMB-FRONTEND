@@ -81,7 +81,12 @@ const Login = () => {
               {/* ===FORM LOGIN ==== */}
               <CCard className="p-4">
                 <CCardBody>
-                  <CForm onSubmit={handleLoginSubmit}>
+                 <CForm 
+                  onSubmit={(e) => {
+                    e.preventDefault(); // Mengunci reload di level komponen langsung
+                    handleLoginSubmit(e);
+                  }}
+                >
                     <h2 className="fw-bold text-dark mb-1">Login</h2>
                     <p className="text-muted mb-4">Masuk ke dashboard keuangan warung kamu</p>
                     {loginError && (

@@ -73,7 +73,7 @@ const AppSidebar = () => {
       <AppSidebarNav items={navigation} />
 
       {/* ==================== 2. FOOTER LOGOUT BARU KAMU ==================== */}
-      <CSidebarFooter className="border-top p-2 d-none d-lg-flex">
+      <CSidebarFooter className="border-top p-2 d-flex">
         <CButton 
          
           variant="ghost" 
