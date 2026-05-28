@@ -52,7 +52,7 @@ const AppHeaderDropdown = () => {
           Akun Pemilik Warung
         </CDropdownHeader>
         
-        <CDropdownItem href="/profil" onClick={(e) => e.preventDefault()}>
+        <CDropdownItem href="/#/profil" onClick={(e) => e.preventDefault()}>
           <CIcon icon={cilUser} className="me-2" />
           Profil Warung (Milik {currentUser})
         </CDropdownItem>
