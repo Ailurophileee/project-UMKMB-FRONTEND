@@ -22,6 +22,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilCloudDownload, cilGraph, cilWarning, cilChartPie } from '@coreui/icons'
 import axios from 'axios'
+import API from '../../utils/api'
 
 import {
   Chart as ChartJS,
@@ -78,9 +79,7 @@ const AnalisisLaporan = () => {
         return
       }
 
-      const respon = await axios.get('/ai/cashflow-forecast', {
-        headers: { 'Authorization': `Bearer ${tokenBersih}` }
-      });
+     const respon = await API.get('/ai/cashflow-forecast')
 
       const dataFinal = respon.data.data || respon.data
       setDataAI(dataFinal) 
@@ -105,8 +104,7 @@ const AnalisisLaporan = () => {
         return
       }
 
-      const respon = await axios.get('/ai/bcg-matrix', {
-        headers: { 'Authorization': `Bearer ${tokenBersih}` },
+      const respon = await API.get('/ai/bcg-matrix', {
         validateStatus: (status) => {
           return (status >= 200 && status < 300) || status === 400;
         }
