@@ -253,21 +253,6 @@ const opsiBCG = {
     return 'secondary';
   }
 
-  const ambilDataAdvisory = async () => {
-    setLoadingAdvisory(true)
-    setErrorAdvisory(null)
-    try {
-      const respon = await API.get('/ai/advisory')
-      // Ambil data payload terdalam dari struktur response Express kamu
-      const dataFinal = respon.data.data
-      setDataAdvisory(dataFinal)
-    } catch (err) {
-      console.error('Gagal memuat Advisory AI:', err)
-      setErrorAdvisory(err.response?.data?.message || 'Gagal menampilkan rekomendasi bisnis.')
-    } finally {
-      setLoadingAdvisory(false)
-    }
-  }
 
    // Trigger effect perpindahan tab
   useEffect(() => {
@@ -275,8 +260,6 @@ const opsiBCG = {
       ambilDataForecastAI()
     } else if (activeTab === 'bcg') {
       ambilDataBCG()
-    } else if (activeTab === 'advisory') {
-      ambilDataAdvisory()
     }
   }, [activeTab])
 
@@ -439,47 +422,6 @@ const opsiBCG = {
                         </CTableBody>
                       </CTable>
                     </>
-                  )}
-                </div>
-              )}
-              {/* TAB 4: SMART ADVISORY AI */}
-              {activeTab === 'advisory' && (
-                <div>
-                  <h6 className="fw-bold text-body mb-1">AI Business Advisor Layer</h6>
-                  <p className="text-body-secondary small mb-4">Hasil integrasi cerdas proyeksi arus kas dan matriks produk untuk panduan keputusan warung.</p>
-
-                  {loadingAdvisory && (
-                    <div className="text-center my-4">
-                      <CSpinner color="success" />
-                      <p className="small text-muted mt-2">Mesin penalaran AI sedang merakit strategi warung Anda...</p>
-                    </div>
-                  )}
-                  
-                  {errorAdvisory && <CCallout color="danger" className="my-3">{errorAdvisory}</CCallout>}
-
-                  {!loadingAdvisory && dataAdvisory && (
-                    <CRow>
-                      {/* Ringkasan Status */}
-                      <CCol md={4} className="mb-3">
-                        <div className="border rounded p-3 bg-body-tertiary">
-                          <span className="text-muted small d-block">Tingkat Prioritas Tindakan</span>
-                          <h5 className="fw-bold text-uppercase text-warning">{dataAdvisory.prioritas}</h5>
-                          
-                          <span className="text-muted small d-block mt-3">Prediksi Kas Besok</span>
-                          <h5 className="fw-bold text-primary">Rp {dataAdvisory.prediksi_kas?.toLocaleString('id-ID')}</h5>
-                        </div>
-                      </CCol>
-
-                      {/* Daftar Strategi Otomatis */}
-                      <CCol md={8}>
-                        <h6 className="fw-bold mb-3">📋 Rekomendasi Strategi Otomatis:</h6>
-                        {dataAdvisory.rekomendasi?.map((item, idx) => (
-                          <CCallout key={idx} color="info" className="bg-body p-3 mb-2 shadow-sm rounded-2">
-                            <span className="text-body fw-medium">{item}</span>
-                          </CCallout>
-                        ))}
-                      </CCol>
-                    </CRow>
                   )}
                 </div>
               )}

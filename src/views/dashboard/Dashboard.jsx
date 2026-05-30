@@ -76,7 +76,7 @@ const Dashboard = () => {
             <CRow className="align-items-start gap-3 gap-md-0">
               {/* Sektor Kiri: Judul & Keterangan Status */}
               <CCol md={8}>
-                <h5 className="fw-bold text-dark mb-1">🎯 Strategi Solusi Bisnis AI Hari Ini</h5>
+                <h5 className="fw-bold text-dark mb-1">Strategi Solusi Bisnis AI Hari Ini</h5>
                 <p className="text-muted small mb-0">
                   Model penalaran mendeteksi status arus kas akhir bermutu{' '}
                   <strong className="text-primary">{dataAdvisory.status_kas}</strong> dengan indeks tindakan:{' '}
@@ -101,10 +101,9 @@ const Dashboard = () => {
 
             {/* Sektor Bawah: List Rekomendasi Riil Hasil Olahan Gabungan */}
             <div className="mt-2">
-              <h6 className="fw-bold text-dark mb-3">📋 Rekomendasi Tindakan Operasional:</h6>
+              <h6 className="fw-bold text-dark mb-3">Rekomendasi Tindakan Operasional:</h6>
               {dataAdvisory.rekomendasi?.map((item, idx) => (
                 <div key={idx} className="d-flex align-items-start gap-2 mb-2 text-body small">
-                  <span className="text-success flex-shrink-0">✨</span>
                   <span className="fw-medium">{item}</span>
                 </div>
               ))}
