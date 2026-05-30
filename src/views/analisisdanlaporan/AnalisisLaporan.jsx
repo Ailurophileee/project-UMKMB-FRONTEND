@@ -59,6 +59,11 @@ const AnalisisLaporan = () => {
   const [loadingBCG, setLoadingBCG] = useState(false)
   const [errorBCG, setErrorBCG] = useState(null)
 
+  // State untuk Advisory AI
+  const [dataAdvisory, setDataAdvisory] = useState(null)
+  const [loadingAdvisory, setLoadingAdvisory] = useState(false)
+  const [errorAdvisory, setErrorAdvisory] = useState(null)
+
   // Helper Pembersihan Token JWT
   const getCleanToken = () => {
     const tokenRaw = localStorage.getItem('accessToken')
@@ -66,9 +71,7 @@ const AnalisisLaporan = () => {
     return tokenRaw.replace(/^"(.*)"$/, '$1')
   }
 
-  // =========================================================================
-  // 📡 INTERAKSI API 1: Cash Flow Forecast
-  // =========================================================================
+  // INTERAKSI API 1: Cash Flow Forecast
   const ambilDataForecastAI = async () => {
     setLoading(true)
     setErrorMsg(null)
@@ -91,9 +94,7 @@ const AnalisisLaporan = () => {
     }
   }
 
-  // =========================================================================
-  // 📡 INTERAKSI API 2: HIT API ROUTER BCG MATRIX
-  // =========================================================================
+  // INTERAKSI API 2: HIT API ROUTER BCG MATRIX
   const ambilDataBCG = async () => {
     setLoadingBCG(true)
     setErrorBCG(null)
@@ -113,7 +114,7 @@ const AnalisisLaporan = () => {
       if (respon.status === 400) {
         setErrorBCG(respon.data.message || 'Anda belum memiliki data produk.');
         setLoadingBCG(false);
-        return; // Stop proses agar tidak lanjut ke mapping data
+        return;
       }
       // Ambil payload terdalam (biasanya respon.data.data dari utility response BE)
       const dataFinal = respon.data.data || respon.data
@@ -130,15 +131,6 @@ const AnalisisLaporan = () => {
     }
   }
 
-  // Trigger effect perpindahan tab
-  useEffect(() => {
-    if (activeTab === 'forecast') {
-      ambilDataForecastAI()
-    } else if (activeTab === 'bcg') {
-      ambilDataBCG()
-    }
-  }, [activeTab])
-
   // Penyederhanaan status biner untuk Forecast
   const getStatusAnalisis = (status) => {
     if (status === 'positif') return { color: 'success', label: 'POSITIF' };
@@ -151,9 +143,7 @@ const AnalisisLaporan = () => {
     alert('Fitur Unduh Laporan PDF sedang menyiapkan ringkasan analisis finansial warung... 📄📥')
   }
 
-  // =========================================================================
-  // 📈 KONFIGURASI GRAFIK 1: Cash Flow Forecast
-  // =========================================================================
+  // KONFIGURASI GRAFIK 1: Cash Flow Forecast
   const nilaiPrediksiBesok = dataAI && dataAI.prediksi_cashflow_besok ? parseFloat(dataAI.prediksi_cashflow_besok) : 0;
   const dataHistorisRiil = dataAI && dataAI.historis_30_hari 
     ? dataAI.historis_30_hari.slice(-4).map(val => parseFloat(val) || 0)
@@ -186,9 +176,7 @@ const AnalisisLaporan = () => {
     }
   }
 
-  // =========================================================================
-  // 📊 KONFIGURASI GRAFIK 2: BCG Matrix Dinamis
-  // =========================================================================
+  // KONFIGURASI GRAFIK 2: BCG Matrix Dinamis
   const listProdukBCG = dataBCGResponse?.produk || []
 
   const getProdukPerKuadran = (kuadran) => {
@@ -213,7 +201,7 @@ const AnalisisLaporan = () => {
     ]
   }
 
-  // 🔥 PERBAIKAN SINKRONISASI 2: Label Sumbu dan Garis Potong Tengah disesuaikan dengan Notebook DS
+  // Label Sumbu dan Garis Potong Tengah disesuaikan dengan Notebook DS
   // Cari nilai tertinggi untuk dinamisasi batas maksimum chart
   const maxQtyData = Math.max(...listProdukBCG.map(p => p.qty_terjual || 100), 100);
   const maxMarginData = Math.max(...listProdukBCG.map(p => p.margin_pct || 50), 50);
@@ -228,7 +216,6 @@ const opsiBCG = {
     plugins: {
       tooltip: {
         callbacks: {
-          // Tooltip dipercantik agar menampilkan info bisnis yang informatif saat titik di-hover
           label: (ctx) => `${ctx.raw.label} (${ctx.dataset.label}) -> Qty: ${ctx.raw.x} pcs, Margin: ${ctx.raw.y}%`
         }
       }
@@ -266,6 +253,33 @@ const opsiBCG = {
     return 'secondary';
   }
 
+  const ambilDataAdvisory = async () => {
+    setLoadingAdvisory(true)
+    setErrorAdvisory(null)
+    try {
+      const respon = await API.get('/ai/advisory')
+      // Ambil data payload terdalam dari struktur response Express kamu
+      const dataFinal = respon.data.data
+      setDataAdvisory(dataFinal)
+    } catch (err) {
+      console.error('Gagal memuat Advisory AI:', err)
+      setErrorAdvisory(err.response?.data?.message || 'Gagal menampilkan rekomendasi bisnis.')
+    } finally {
+      setLoadingAdvisory(false)
+    }
+  }
+
+   // Trigger effect perpindahan tab
+  useEffect(() => {
+    if (activeTab === 'forecast') {
+      ambilDataForecastAI()
+    } else if (activeTab === 'bcg') {
+      ambilDataBCG()
+    } else if (activeTab === 'advisory') {
+      ambilDataAdvisory()
+    }
+  }, [activeTab])
+
   return (
     <CRow>
       <CCol xs={12}>
@@ -292,6 +306,11 @@ const opsiBCG = {
               <CNavItem>
                 <CNavLink href="#" active={activeTab === 'bcg'} onClick={(e) => { e.preventDefault(); setActiveTab('bcg') }} className="d-flex align-items-center gap-2">
                   <CIcon icon={cilChartPie} className="text-warning" /> BCG Matrix
+                </CNavLink>
+              </CNavItem>
+              <CNavItem>
+                <CNavLink href="#" active={activeTab === 'advisory'} onClick={(e) => { e.preventDefault(); setActiveTab('advisory') }} className="d-flex align-items-center gap-2">
+                  <CIcon icon={cilChartPie} className="text-success" /> Smart Advisory AI
                 </CNavLink>
               </CNavItem>
             </CNav>
@@ -421,6 +440,48 @@ const opsiBCG = {
                       </CTable>
                     </>
                   )}
+
+                  {/* TAB 4: SMART ADVISORY AI */}
+                  {activeTab === 'advisory' && (
+                  <div>
+                    <h6 className="fw-bold text-body mb-1">AI Business Advisor Layer</h6>
+                    <p className="text-body-secondary small mb-4">Hasil integrasi cerdas proyeksi arus kas dan matriks produk untuk panduan keputusan warung.</p>
+
+                    {loadingAdvisory && (
+                      <div className="text-center my-4">
+                        <CSpinner color="success" />
+                        <p className="small text-muted mt-2">Mesin penalaran AI sedang merakit strategi warung Anda...</p>
+                      </div>
+                    )}
+                    
+                    {errorAdvisory && <CCallout color="danger" className="my-3">{errorAdvisory}</CCallout>}
+
+                    {!loadingAdvisory && dataAdvisory && (
+                      <CRow>
+                        {/* Ringkasan Status */}
+                        <CCol md={4} className="mb-3">
+                          <div className="border rounded p-3 bg-body-tertiary">
+                            <span className="text-muted small d-block">Tingkat Prioritas Tindakan</span>
+                            <h5 className="fw-bold text-uppercase text-warning">{dataAdvisory.prioritas}</h5>
+                            
+                            <span className="text-muted small d-block mt-3">Prediksi Kas Besok</span>
+                            <h5 className="fw-bold text-primary">Rp {dataAdvisory.prediksi_kas?.toLocaleString('id-ID')}</h5>
+                          </div>
+                        </CCol>
+
+                        {/* Daftar Strategi Otomatis */}
+                        <CCol md={8}>
+                          <h6 className="fw-bold mb-3">📋 Rekomendasi Strategi Otomatis:</h6>
+                          {dataAdvisory.rekomendasi?.map((item, idx) => (
+                            <CCallout key={idx} color="info" className="bg-body p-3 mb-2 shadow-sm rounded-2">
+                              <span className="text-body fw-medium">{item}</span>
+                            </CCallout>
+                          ))}
+                        </CCol>
+                      </CRow>
+                    )}
+                  </div>
+                )}
                 </div>
               )}
             </div>
