@@ -83,48 +83,6 @@ const WidgetsDropdown = (props) => {
           title="Arus Kas Bersih"
         />
       </CCol>
-
-      {/* ================= BARIS 2: DATA & INSIGHT PRODUK ================= */}
-
-      {/* 🟣 KOTAK 4: PRODUK TERLARIS */}
-      <CCol sm={6} md={4} xl={4}>
-        <CWidgetStatsA
-          color="primary"
-          value={
-            <div className="fs-4 fw-semibold">
-              {summaryData?.produk_terlaris || 'Belum ada data'}
-            </div>
-          }
-          title="Produk Terlaris"
-        />
-      </CCol>
-
-      {/* 🟠 KOTAK 5: PENGELUARAN TERBESAR */}
-      <CCol sm={6} md={4} xl={4}>
-        <CWidgetStatsA
-          color="danger"
-          value={
-            <div className="fs-4 fw-semibold">
-              {summaryData?.pengeluaran_terbesar || 'Belum ada data'}
-            </div>
-          }
-          title="Kategori Pengeluaran Terbesar"
-        />
-      </CCol>
-
-      {/* 🟡 KOTAK 6: INSIGHT AI */}
-      <CCol sm={6} md={4} xl={4}>
-        <CWidgetStatsA
-          color="warning"
-          value={
-            <div className="fs-4 fw-semibold">
-            <span className="fs-6 fw-normal">Fitur AI Segera Hadir</span>
-            </div>
-          }
-          title="Insight Minggu Ini"
-        />
-      </CCol>
-
     </CRow>
   )
 }
