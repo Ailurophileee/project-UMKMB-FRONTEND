@@ -64,8 +64,14 @@ const Login = () => {
       
     } catch (error) {
       //console.error('Error saat login:', error)
-      const pesanError = error.response?.data?.message || 'Gagal masuk. Periksa kembali username dan password kamu!';
-      setLoginError(pesanError);
+      // 💡 Cek jika error berstatus 401 (Salah password/username dari BE)
+      if (error.response && error.response.status === 401) {
+        // Paksa gunakan teks pilihanmu sendiri untuk semua isu kredensial
+        setLoginError('Gagal masuk. Periksa kembali username dan password kamu!');
+      } else {
+        // Jika errornya di luar salah password (misal server BE mati/error 500)
+        setLoginError(error.response?.data?.message || 'Terjadi kesalahan sistem pada server.');
+      }
     }
   }
 
