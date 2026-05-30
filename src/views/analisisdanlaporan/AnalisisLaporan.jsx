@@ -440,8 +440,9 @@ const opsiBCG = {
                       </CTable>
                     </>
                   )}
-
-                  {/* TAB 4: SMART ADVISORY AI */}
+                </div>
+              )}
+                                {/* TAB 4: SMART ADVISORY AI */}
                   {activeTab === 'advisory' && (
                   <div>
                     <h6 className="fw-bold text-body mb-1">AI Business Advisor Layer</h6>
@@ -482,8 +483,6 @@ const opsiBCG = {
                     )}
                   </div>
                 )}
-                </div>
-              )}
             </div>
           </CCardBody>
         </CCard>
