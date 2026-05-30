@@ -291,11 +291,6 @@ const opsiBCG = {
                   <CIcon icon={cilChartPie} className="text-warning" /> BCG Matrix
                 </CNavLink>
               </CNavItem>
-              <CNavItem>
-                <CNavLink href="#" active={activeTab === 'advisory'} onClick={(e) => { e.preventDefault(); setActiveTab('advisory') }} className="d-flex align-items-center gap-2">
-                  <CIcon icon={cilChartPie} className="text-success" /> Smart Advisory AI
-                </CNavLink>
-              </CNavItem>
             </CNav>
 
             <div className="tab-content-wrapper mt-2">
@@ -310,8 +305,7 @@ const opsiBCG = {
 
                   {dataAI && !loading && (
                     <CCallout color={statusObj.color} className="bg-body-tertiary mb-4">
-                      <div className={`fw-bold text-${statusObj.color} mb-1`}>
-                        🔮 Hasil Analisis Prediksi AI untuk Besok Hari
+                      <div className={`fw-bold text-${statusObj.color} mb-1`}>Hasil Analisis Prediksi AI untuk Besok Hari
                       </div>
                       <span className="text-body">
                         Besok diestimasikan kas warungmu bernilai <strong className="text-primary">Rp {dataAI.prediksi_cashflow_besok?.toLocaleString('id-ID')}</strong> 
