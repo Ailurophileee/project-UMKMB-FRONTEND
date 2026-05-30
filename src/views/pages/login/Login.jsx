@@ -42,30 +42,26 @@ const Login = () => {
     }
 
     try {
-      // 2. Amankan LocalStorage: hapus sisa-sisa token lama agar tidak mengganggu auth
       localStorage.removeItem('accessToken')
-
-      // 3. Tembak rute autentikasi milik backend
       const response = await API.post('/authentication', payload)
-      
-      // 4. Validasi isi data respons (Antisipasi jika BE mengirim status 200 tapi isinya gagal)
+      if (response.data.status === 'fail') {
+        setLoginError(response.data.message);
+        return;
+      }
       const token = response?.data?.data?.accessToken
 
       if (token) {
-        // 5. Simpan token JWT murni ke dalam localStorage
         localStorage.setItem('accessToken', token)
-        
-        // 6. Lempar user masuk ke halaman dashboard HANYA jika token sukses didapatkan
         navigate('/dashboard')
       } else {
-        // Jika status sukses tapi token tidak dikirim oleh BE
         setLoginError(response?.data?.message || 'Gagal mengambil akses token dari server.')
       }
       
     } catch (error) {
       //console.error('Error saat login:', error)
-      const pesanError = error.response?.data?.message || 'Gagal masuk. Periksa kembali username dan password kamu!';
-      setLoginError(pesanError);
+      //const pesanError = error.response?.data?.message || 'Gagal masuk. Periksa kembali username dan password kamu!';
+      //setLoginError(pesanError);
+      setLoginError('Terjadi kesalahan sistem pada server.');
     }
   }
 
