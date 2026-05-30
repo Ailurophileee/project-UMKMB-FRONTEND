@@ -21,16 +21,20 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response, // Jika request sukses, teruskan saja
   (error) => {
-    // Jika backend mengembalikan status 401 atau 403 karena token hangus/invalid
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    // 💡 CEK: Apakah error ini berasal dari rute /authentication (Login)?
+    // Jika iya, jangan ditendang ke /login agar pesan salah password bisa muncul!
+    const isRouteLogin = error.config?.url?.includes('/authentication');
+
+    if (!isRouteLogin && error.response && (error.response.status === 401 || error.response.status === 403)) {
       console.warn('Sesi Anda telah berakhir (Token Expired). Mengalihkan ke halaman login...');
       
-      localStorage.removeItem('accessToken'); // Hapus token busuk dari storage
-      localStorage.removeItem('user');  // Hapus data user jika ada
+      localStorage.removeItem('accessToken'); 
+      localStorage.removeItem('user');  
       
-      // Tendang paksa user kembali ke halaman login di browser
       window.location.href = '/login'; 
+      return Promise.reject(error);
     }
+    
     return Promise.reject(error);
   }
 );
