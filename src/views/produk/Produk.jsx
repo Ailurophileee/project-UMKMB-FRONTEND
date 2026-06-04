@@ -22,14 +22,14 @@ import {
 import API from '../../utils/api'
 
 const Produk = () => {
-  // --- 1. STATE FILTRASI & LAYOUT TABEL ---
+  // 1. STATE FILTRASI & LAYOUT TABEL
   const [searchTerm, setSearchTerm] = useState('')
   const [displayLimit, setDisplayLimit] = useState(10)
   const [sortConfig, setSortConfig] = useState({ key: 'id_produk', direction: 'asc' })
   const [isEditingId, setIsEditingId] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // --- 2. STATE FORM INPUT (100% BULAT MURNI) ---
+  // 2. STATE FORM INPUT
   const [formData, setFormData] = useState({
     nama_produk: '',
     harga_jual: 0,
@@ -38,10 +38,10 @@ const Produk = () => {
     status: 'Aktif'
   })
 
-  // --- 3. STATE DAFTAR PRODUK (MURNI DARI DATABASE) ---
+  // 3. STATE DAFTAR PRODUK (MURNI DARI DATABASE) 
   const [daftarProduk, setDaftarProduk] = useState([])
 
-  // --- 4. FUNGSI GET: SINKRONISASI DENGAN GET ALL /api/produk ---
+  // 4. FUNGSI GET
   const fetchProducts = async () => {
     try {
       setLoading(true)
@@ -69,20 +69,18 @@ const Produk = () => {
     fetchProducts()
   }, [])
 
-  // --- 5. LOGIKA PERHITUNGAN MARGIN PRODUK (MURNI UNTUK TAMPILAN HELPER) ---
-  // Gunakan Number() agar presisi, dan pastikan tidak mengubah isi state utama
+  // 5. LOGIKA PERHITUNGAN MARGIN PRODUK (MURNI UNTUK TAMPILAN HELPER)
   const jual = Number(formData.harga_jual) || 0
   const pokok = Number(formData.harga_pokok) || 0
   const estimasiKeuntungan = jual - pokok
   const marginPct = jual > 0 ? ((estimasiKeuntungan / jual) * 100).toFixed(1) : 0
 
-  // --- 6. FUNGSI AKSI KETIKAN & SUBMIT API ---
+  // 6. FUNGSI AKSI KETIKAN & SUBMIT API
   const handleInputChange = (e) => {
     const { name, value } = e.target
     
     setFormData((prev) => ({
       ...prev,
-      // 🔥 PERBAIKAN 1: Bersihkan input langsung ke Number bulat murni tanpa interupsi string/parseInt
       [name]: name === 'harga_jual' || name === 'harga_pokok' 
         ? (value === '' ? 0 : Math.round(Number(value))) 
         : value
@@ -103,7 +101,6 @@ const Produk = () => {
   const handleSimpan = async (e) => {
     e.preventDefault()
 
-    // 🔥 PERBAIKAN 2: Bungkus payload dengan Math.round(Number()) mutlak untuk mengunci nominal ke MySQL
     const payload = {
       nama_produk: formData.nama_produk,
       harga_jual: Math.round(Number(formData.harga_jual)) || 0,
@@ -112,7 +109,6 @@ const Produk = () => {
       status: formData.status
     }
 
-    console.log('🔥 PAYLOAD AMAN DIKIRIM KE BE:', payload)
 
     try {
       if (isEditingId) {
@@ -199,8 +195,8 @@ const Produk = () => {
                 <CCol md={6}>
                  <CFormLabel>Harga Pokok</CFormLabel>
                     <CFormInput
-                      type="text" // 🔥 UBAH DARI "number" MENJADI "text"
-                      inputMode="numeric" // 🔥 Memunculkan keyboard angka saja jika dibuka di HP
+                      type="text" 
+                      inputMode="numeric" 
                       name="harga_pokok"
                       placeholder="Modal Rp"
                       value={formData.harga_pokok}
@@ -211,8 +207,8 @@ const Produk = () => {
                 <CCol md={6}>
                   <CFormLabel>Harga Jual</CFormLabel>
                     <CFormInput
-                      type="text" // 🔥 UBAH DARI "number" MENJADI "text"
-                      inputMode="numeric" // 🔥 Memunculkan keyboard angka saja jika dibuka di HP
+                      type="text" 
+                      inputMode="numeric" 
                       name="harga_jual"
                       placeholder="Jual Rp"
                       value={formData.harga_jual}

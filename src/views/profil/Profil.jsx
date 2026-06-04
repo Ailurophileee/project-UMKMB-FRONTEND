@@ -19,7 +19,7 @@ const Profil = () => {
   const [loading, setLoading] = useState(true)
   const [idWarung, setIdWarung] = useState(null)
 
-  // 1. STATE FORM: Mengikuti 100% skema mergedPayload backend kamu
+  // 1. STATE FORM
   const [profilUsaha, setProfilUsaha] = useState({
     nama_warung: '',
     pemilik: '',
@@ -118,7 +118,6 @@ const Profil = () => {
     <CRow className="justify-content-center">
       <CCol xs={12} md={8}>
         <CCard className="mb-4 shadow-sm">
-          {/* 🔥 PERBAIKAN: bg-dark dicopot agar background judul adaptif mengikuti tema light/dark */}
           <CCardHeader className="d-flex justify-content-between align-items-center fw-bold fs-5 py-3 text-body bg-body-tertiary border-bottom">
             <div className="d-flex align-items-center gap-2">
               <CIcon icon={cilHome} size="lg" className="text-primary" />
@@ -142,7 +141,6 @@ const Profil = () => {
           </CCardHeader>
           <CCardBody className="p-4">
             <CRow>
-              {/* 🔥 PERBAIKAN KELAS WARNA: text-muted -> text-body-secondary, text-dark -> text-body */}
               <CCol md={6} className="mb-4">
                 <label className="text-body-secondary small d-block mb-1 fw-semibold">Nama Usaha / Warung</label>
                 {isEditMode ? (

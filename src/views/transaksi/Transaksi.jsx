@@ -144,7 +144,6 @@ const Transaksi = () => {
     e.preventDefault()
     const sekarang = new Date()
     
-    // 🔥 PERBAIKAN: Kata 'Thermal =' dicopot total agar variabel jam_transaksi valid
     const jamTransaksi = sekarang.toTimeString().split(' ')[0]
 
     // Jika totalNominalOtomatis bernilai lebih dari 0, prioritaskan nilai kalkulasi tersebut

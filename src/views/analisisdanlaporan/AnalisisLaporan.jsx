@@ -48,9 +48,7 @@ ChartJS.register(
   Legend
 )
 
-// ==========================================
-// 🛠️ REUSABLE COMPONENT: TABEL AUDIT DENGAN SEARCH, SORT, & LIMITER
-// ==========================================
+
 const TableAudit = ({ dataRaw, isAnomalyTable }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortOrder, setSortOrder] = useState('desc') // desc = terbesar, asc = terkecil
