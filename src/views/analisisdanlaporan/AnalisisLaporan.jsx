@@ -254,6 +254,7 @@ const opsiBCG = {
     return 'secondary';
   }
 
+  // INTERAKSI API 3: HIT API ROUTER ANOMALY ALERT
   const ambilDataAnomaly = async () => {
     setLoadingAnomaly(true)
     setErrorAnomaly(null)
@@ -404,22 +405,22 @@ const opsiBCG = {
                           </CTableRow>
                         </CTableHead>
                         <CTableBody className="text-body">
-                          {dataAnomaly.transaksi && dataAnomaly.transaksi.length > 0 ? (
-                            dataAnomaly.transaksi.map((trx, index) => {
-                              const isAnomali = trx.status === 'anomali' || trx.is_anomaly === true;
+                          {dataAnomaly.hasil && dataAnomaly.hasil.length > 0 ? (
+                            dataAnomaly.hasil.map((trx, index) => {
+                              const beneranAnomali = trx.is_anomaly === 1;
                               return (
-                                <CTableRow key={index} className={isAnomali ? 'table-danger' : ''}>
+                                <CTableRow key={index} className={beneranAnomali ? 'table-danger' : ''}>
                                   <CTableDataCell className="small fw-semibold">{trx.id_transaksi}</CTableDataCell>
                                   <CTableDataCell><CBadge color="secondary">{trx.kategori}</CBadge></CTableDataCell>
                                   <CTableDataCell className="fw-bold">Rp {(trx.nominal || 0).toLocaleString('id-ID')}</CTableDataCell>
-                                  <CTableDataCell className="text-muted small">Rp {(trx.rolling_mean_7d || 0).toLocaleString('id-ID')}</CTableDataCell>
+                                  <CTableDataCell className="text-muted small">{(trx.anomaly_score * 100).toFixed(1)}%</CTableDataCell>
                                   <CTableDataCell>
-                                    <CBadge color={isAnomali ? 'danger' : 'success'}>
-                                      {isAnomali ? 'ANOMALI' : 'NORMAL'}
+                                    <CBadge color={beneranAnomali ? 'danger' : 'success'}>
+                                      {beneranAnomali ? 'ANOMALI' : 'NORMAL'}
                                     </CBadge>
                                   </CTableDataCell>
-                                  <CTableDataCell className={`small ${isAnomali ? 'fw-bold text-danger' : 'text-muted'}`}>
-                                    {trx.message || trx.peringatan || (isAnomali ? '⚠️ Pengeluaran melonjak tajam dari batas wajar harian!' : 'Transaksi aman dan tercatat sesuai batas wajar.')}
+                                  <CTableDataCell className={`small ${beneranAnomali ? 'fw-bold text-danger' : 'text-muted'}`}>
+                                    {trx.pesan_anomali || (beneranAnomali ? '⚠️ Pengeluaran melonjak tajam dari batas wajar harian!' : 'Transaksi aman dan tercatat sesuai batas wajar.')}
                                   </CTableDataCell>
                                 </CTableRow>
                               );
