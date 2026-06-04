@@ -17,11 +17,12 @@ import {
   CTableDataCell,
   CBadge,
   CCallout,
-  CSpinner
+  CSpinner,
+  CFormInput,
+  CFormSelect
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilCloudDownload, cilGraph, cilWarning, cilChartPie } from '@coreui/icons'
-import axios from 'axios'
+import { cilCloudDownload, cilGraph, cilWarning, cilChartPie, cilChevronCircleUp, cilChevronCircleDown } from '@coreui/icons'
 import API from '../../utils/api'
 
 import {
@@ -46,6 +47,123 @@ ChartJS.register(
   Legend
 )
 
+// ==========================================
+// 🛠️ REUSABLE COMPONENT: TABEL AUDIT DENGAN SEARCH, SORT, & LIMITER
+// ==========================================
+const TableAudit = ({ dataRaw, isAnomalyTable }) => {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortOrder, setSortOrder] = useState('desc') // desc = terbesar, asc = terkecil
+  const [rowLimit, setRowLimit] = useState(5) // Default tampilkan 5 baris data
+
+  // 1. Jalankan Fitur Filter Pencarian (Search)
+  const dataFiltered = dataRaw.filter(trx => {
+    const query = searchQuery.toLowerCase()
+    return (
+      String(trx.id_transaksi).toLowerCase().includes(query) ||
+      String(trx.kategori).toLowerCase().includes(query)
+    )
+  })
+
+  // 2. Jalankan Fitur Pengurutan Nominal (Sorting)
+  const dataSorted = [...dataFiltered].sort((a, b) => {
+    const nomA = parseFloat(a.nominal) || 0
+    const nomB = parseFloat(b.nominal) || 0
+    return sortOrder === 'desc' ? nomB - nomA : nomA - nomB
+  })
+
+  // 3. Jalankan Pembatasan Baris Data (Row Limiter / Pagination Sederhana)
+  const dataDisplayed = dataSorted.slice(0, rowLimit)
+
+  return (
+    <div className="mb-4 p-3 bg-body border rounded shadow-sm">
+      {/* Kontrol Toolbar Atas Tabel */}
+      <CRow className="g-2 mb-3 align-items-center">
+        <CCol xs={12} sm={6} md={4}>
+          <CFormInput
+            type="text"
+            placeholder="Cari ID atau Kategori..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            size="sm"
+          />
+        </CCol>
+        <CCol xs={6} sm={3} md={4} className="d-flex align-items-center gap-2">
+          <span className="small text-muted text-nowrap">Urutan Kas:</span>
+          <CButton 
+            color={sortOrder === 'desc' ? 'primary' : 'secondary'} 
+            size="sm"
+            onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+            className="d-flex align-items-center gap-1"
+          >
+            <CIcon icon={sortOrder === 'desc' ? cilChevronCircleDown : cilChevronCircleUp} />
+            {sortOrder === 'desc' ? 'Terbesar' : 'Terkecil'}
+          </CButton>
+        </CCol>
+        <CCol xs={6} sm={3} md={4} className="d-flex align-items-center justify-content-sm-end gap-2">
+          <span className="small text-muted text-nowrap">Tampilkan:</span>
+          <CFormSelect 
+            size="sm" 
+            style={{ width: '75px' }} 
+            value={rowLimit} 
+            onChange={(e) => setRowLimit(parseInt(e.target.value))}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={dataSorted.length}>Semua</option>
+          </CFormSelect>
+        </CCol>
+      </CRow>
+
+      {/* Tampilan Utama Tabel */}
+      <CTable align="middle" hover bordered responsive className="mb-0">
+        <CTableHead color={isAnomalyTable ? 'danger' : 'light'}>
+          <CTableRow>
+            <CTableHeaderCell>ID Transaksi</CTableHeaderCell>
+            <CTableHeaderCell>Kategori</CTableHeaderCell>
+            <CTableHeaderCell>Nominal Pengeluaran</CTableHeaderCell>
+            <CTableHeaderCell>Baseline Rata-rata</CTableHeaderCell>
+            <CTableHeaderCell>Status Audit</CTableHeaderCell>
+            <CTableHeaderCell>Hasil Analisis Model AI</CTableHeaderCell>
+          </CTableRow>
+        </CTableHead>
+        <CTableBody className="text-body">
+          {dataDisplayed.length > 0 ? (
+            dataDisplayed.map((trx, index) => (
+              <CTableRow key={index} className={isAnomalyTable ? 'table-danger' : ''}>
+                <CTableDataCell className="small fw-semibold">{trx.id_transaksi}</CTableDataCell>
+                <CTableDataCell><CBadge color="secondary">{trx.kategori}</CBadge></CTableDataCell>
+                <CTableDataCell className="fw-bold">Rp {(trx.nominal || 0).toLocaleString('id-ID')}</CTableDataCell>
+                <CTableDataCell className="text-muted small">{(trx.anomaly_score * 100).toFixed(1)}%</CTableDataCell>
+                <CTableDataCell>
+                  <CBadge color={isAnomalyTable ? 'danger' : 'success'}>
+                    {isAnomalyTable ? 'ANOMALI' : 'NORMAL'}
+                  </CBadge>
+                </CTableDataCell>
+                <CTableDataCell className={`small ${isAnomalyTable ? 'fw-bold text-danger' : 'text-muted'}`}>
+                  {trx.pesan_anomali || (isAnomalyTable ? '⚠️ Pengeluaran melonjak tajam dari batas wajar harian!' : 'Transaksi aman dan tercatat sesuai batas wajar.')}
+                </CTableDataCell>
+              </CTableRow>
+            ))
+          ) : (
+            <CTableRow>
+              <CTableDataCell colSpan="6" className="text-center text-muted small py-3">
+                Tidak ada data transaksi yang cocok dengan kriteria filter.
+              </CTableDataCell>
+            </CTableRow>
+          )}
+        </CTableBody>
+      </CTable>
+      <div className="small text-muted mt-2 text-end">
+        Menampilkan {dataDisplayed.length} dari {dataSorted.length} baris data transaksi.
+      </div>
+    </div>
+  )
+}
+
+// ==========================================
+// 🏪 MAIN COMPONENT: ANALISIS LAPORAN DASHBOARD
+// ==========================================
 const AnalisisLaporan = () => {
   const [activeTab, setActiveTab] = useState('forecast')
   
@@ -58,11 +176,6 @@ const AnalisisLaporan = () => {
   const [dataBCGResponse, setDataBCGResponse] = useState(null)
   const [loadingBCG, setLoadingBCG] = useState(false)
   const [errorBCG, setErrorBCG] = useState(null)
-
-  // State untuk Advisory AI
-  const [dataAdvisory, setDataAdvisory] = useState(null)
-  const [loadingAdvisory, setLoadingAdvisory] = useState(false)
-  const [errorAdvisory, setErrorAdvisory] = useState(null)
 
   // State untuk Anomaly Alert
   const [dataAnomaly, setDataAnomaly] = useState(null)
@@ -86,9 +199,7 @@ const AnalisisLaporan = () => {
         setErrorMsg('Sesi login tidak ditemukan. Silakan logout lalu login kembali.')
         return
       }
-
-     const respon = await API.get('/ai/cashflow-forecast')
-
+      const respon = await API.get('/ai/cashflow-forecast')
       const dataFinal = respon.data.data || respon.data
       setDataAI(dataFinal) 
     } catch (err) {
@@ -121,7 +232,7 @@ const AnalisisLaporan = () => {
         setLoadingBCG(false);
         return;
       }
-      // Ambil payload terdalam (biasanya respon.data.data dari utility response BE)
+      
       const dataFinal = respon.data.data || respon.data
       if (Array.isArray(dataFinal)) {
         setDataBCGResponse({ produk: dataFinal })
@@ -187,8 +298,8 @@ const AnalisisLaporan = () => {
         return teksKuadran.includes(kuadran.toLowerCase());
       })
       .map((item) => ({
-        x: Number(item.qty_terjual || 0), // Sumbu X riil: Qty terjual dari DB/AI
-        y: Number(item.margin_pct || 0),  // Sumbu Y riil: Margin persen dari AI
+        x: Number(item.qty_terjual || 0),
+        y: Number(item.margin_pct || 0), 
         label: item.nama_produk
       }))
   }
@@ -202,16 +313,13 @@ const AnalisisLaporan = () => {
     ]
   }
 
-  // Label Sumbu dan Garis Potong Tengah disesuaikan dengan Notebook DS
-  // Cari nilai tertinggi untuk dinamisasi batas maksimum chart
   const maxQtyData = Math.max(...listProdukBCG.map(p => p.qty_terjual || 100), 100);
   const maxMarginData = Math.max(...listProdukBCG.map(p => p.margin_pct || 50), 50);
 
-  // Ambil nilai median (jika BE mengirimkannya), atau gunakan nilai default rata-rata tengah warung
   const thresholdX = dataBCGResponse?.median_qty || (maxQtyData / 2);
   const thresholdY = dataBCGResponse?.median_margin || (maxMarginData / 2);
 
-const opsiBCG = {
+  const opsiBCG = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -227,7 +335,6 @@ const opsiBCG = {
         max: maxQtyData + 20, 
         title: { display: true, text: 'Volume Penjualan (Qty Terjual pcs)' }, 
         grid: { 
-          // Menggambar garis cross vertikal tepat di angka Median target DS
           color: (ctx) => (ctx.tick.value >= thresholdX - 5 && ctx.tick.value <= thresholdX + 5 ? '#636f83' : 'rgba(0,0,0,0.05)'), 
           lineWidth: (ctx) => (ctx.tick.value >= thresholdX - 5 && ctx.tick.value <= thresholdX + 5 ? 2 : 1) 
         } 
@@ -237,7 +344,6 @@ const opsiBCG = {
         max: maxMarginData + 10, 
         title: { display: true, text: 'Margin Keuntungan (Margin %)' }, 
         grid: { 
-          // Menggambar garis cross horizontal tepat di angka Median target DS
           color: (ctx) => (ctx.tick.value >= thresholdY - 2 && ctx.tick.value <= thresholdY + 2 ? '#636f83' : 'rgba(0,0,0,0.05)'), 
           lineWidth: (ctx) => (ctx.tick.value >= thresholdY - 2 && ctx.tick.value <= thresholdY + 2 ? 2 : 1) 
         } 
@@ -261,7 +367,7 @@ const opsiBCG = {
     try {
       const respon = await API.get('/ai/anomaly')
       const dataFinal = respon.data.data || respon.data
-      setDataAnomaly(dataFinal) // Akan menyimpan array transaksi hasil prediksi AI
+      setDataAnomaly(dataFinal) 
     } catch (err) {
       console.error('Gagal memuat Anomaly Alert AI:', err)
       setErrorAnomaly(err.response?.data?.message || 'Gagal menampilkan deteksi kecurangan bisnis.')
@@ -274,8 +380,7 @@ const opsiBCG = {
     alert('Fitur Unduh Laporan PDF sedang menyiapkan ringkasan analisis finansial warung... 📄📥')
   }
 
-   // Trigger effect perpindahan tab
- useEffect(() => {
+  useEffect(() => {
     if (activeTab === 'forecast') {
       ambilDataForecastAI()
     } else if (activeTab === 'anomaly') {
@@ -284,6 +389,11 @@ const opsiBCG = {
       ambilDataBCG()
     }
   }, [activeTab])
+
+  // 🔔 MEMISAHKAN DATA ANOMALI VS NORMAL UTK TABEL TERPISAH
+  const listHasilAnomalyAll = dataAnomaly?.hasil || []
+  const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === 1)
+  const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly !== 1)
 
   return (
     <CRow>
@@ -327,11 +437,9 @@ const opsiBCG = {
 
                   {dataAI && !loading && (
                     <CCallout color={statusObj.color} className="bg-body-tertiary mb-4">
-                      <div className={`fw-bold text-${statusObj.color} mb-1`}>Hasil Analisis Prediksi AI untuk Besok Hari
-                      </div>
+                      <div className={`fw-bold text-${statusObj.color} mb-1`}>Hasil Analisis Prediksi AI untuk Besok Hari</div>
                       <span className="text-body">
-                        Besok diestimasikan kas warungmu bernilai <strong className="text-primary">Rp {dataAI.prediksi_cashflow_besok?.toLocaleString('id-ID')}</strong> 
-                        dengan status performa <CBadge color={statusObj.color}>{statusObj.label}</CBadge>.
+                        Besok diestimasikan kas warungmu bernilai <strong className="text-primary">Rp {dataAI.prediksi_cashflow_besok?.toLocaleString('id-ID')}</strong> dengan status performa <CBadge color={statusObj.color}>{statusObj.label}</CBadge>.
                         {dataAI.peringatan && <div className="mt-2 text-body small"><strong>💡 Catatan Penting:</strong> {dataAI.peringatan}</div>}
                       </span>
                     </CCallout>
@@ -366,7 +474,7 @@ const opsiBCG = {
                 </div>
               )}
 
-             {/* TAB 2: ANOMALY ALERT */}
+              {/* TAB 2: ANOMALY ALERT */}
               {activeTab === 'anomaly' && (
                 <div>
                   <h6 className="fw-bold text-body mb-1">Notifikasi Otomatis Anomali & Kecurangan Kasir</h6>
@@ -383,57 +491,27 @@ const opsiBCG = {
 
                   {!loadingAnomaly && !errorAnomaly && dataAnomaly && (
                     <>
-                      {/* Tampilkan Peringatan Bahaya jika ada minimal 1 transaksi berstatus anomali */}
-                      {dataAnomaly.transaksi?.some(t => t.status === 'anomali' || t.is_anomaly === true) && (
+                      {/* Peringatan Bahaya jika ada anomali */}
+                      {arrayHanyaAnomali.length > 0 && (
                         <CCallout color="danger" className="bg-body-tertiary mb-4">
                           <div className="fw-bold text-danger d-flex align-items-center gap-2 mb-1">
-                            <CIcon icon={cilWarning} style={{ width: '18px' }} /> Perhatian: Terdeteksi Transaksi Mencurigakan!
+                            <CIcon icon={cilWarning} style={{ width: '18px' }} /> Perhatian: Terdeteksi {arrayHanyaAnomali.length} Transaksi Mencurigakan!
                           </div>
                           <span className="text-body small">Sistem mendeteksi adanya pengeluaran dana dengan nilai yang melompati batas normal rata-rata kategori. Segera lakukan audit ulang internal pada baris tabel bertanda merah.</span>
                         </CCallout>
                       )}
 
-                      <CTable align="middle" hover bordered responsive>
-                        <CTableHead color="light">
-                          <CTableRow>
-                            <CTableHeaderCell>ID Transaksi</CTableHeaderCell>
-                            <CTableHeaderCell>Kategori</CTableHeaderCell>
-                            <CTableHeaderCell>Nominal Pengeluaran</CTableHeaderCell>
-                            <CTableHeaderCell>Baseline Rata-rata</CTableHeaderCell>
-                            <CTableHeaderCell>Status Audit</CTableHeaderCell>
-                            <CTableHeaderCell>Hasil Analisis Model AI</CTableHeaderCell>
-                          </CTableRow>
-                        </CTableHead>
-                        <CTableBody className="text-body">
-                          {dataAnomaly.hasil && dataAnomaly.hasil.length > 0 ? (
-                            dataAnomaly.hasil.map((trx, index) => {
-                              const beneranAnomali = trx.is_anomaly === 1;
-                              return (
-                                <CTableRow key={index} className={beneranAnomali ? 'table-danger' : ''}>
-                                  <CTableDataCell className="small fw-semibold">{trx.id_transaksi}</CTableDataCell>
-                                  <CTableDataCell><CBadge color="secondary">{trx.kategori}</CBadge></CTableDataCell>
-                                  <CTableDataCell className="fw-bold">Rp {(trx.nominal || 0).toLocaleString('id-ID')}</CTableDataCell>
-                                  <CTableDataCell className="text-muted small">{(trx.anomaly_score * 100).toFixed(1)}%</CTableDataCell>
-                                  <CTableDataCell>
-                                    <CBadge color={beneranAnomali ? 'danger' : 'success'}>
-                                      {beneranAnomali ? 'ANOMALI' : 'NORMAL'}
-                                    </CBadge>
-                                  </CTableDataCell>
-                                  <CTableDataCell className={`small ${beneranAnomali ? 'fw-bold text-danger' : 'text-muted'}`}>
-                                    {trx.pesan_anomali || (beneranAnomali ? '⚠️ Pengeluaran melonjak tajam dari batas wajar harian!' : 'Transaksi aman dan tercatat sesuai batas wajar.')}
-                                  </CTableDataCell>
-                                </CTableRow>
-                              );
-                            })
-                          ) : (
-                            <CTableRow>
-                              <CTableDataCell colSpan="6" className="text-center text-muted small py-3">
-                                Tidak ada data pengeluaran yang mencurigakan saat ini. Semua transaksi berjalan normal.
-                              </CTableDataCell>
-                            </CTableRow>
-                          )}
-                        </CTableBody>
-                      </CTable>
+                      {/* 🚨 TABEL 1: KHUSUS DATA YANG TERDETEKSI ANOMALI (ATAS) */}
+                      <h6 className="fw-bold text-danger mb-2 d-flex align-items-center gap-2">
+                        <span>🚨</span> Transaksi Terindikasi Anomali ({arrayHanyaAnomali.length} Data)
+                      </h6>
+                      <TableAudit dataRaw={arrayHanyaAnomali} isAnomalyTable={true} />
+
+                      {/* 🍏 TABEL 2: KHUSUS DATA YANG BERSTATUS NORMAL (BAWAH) */}
+                      <h6 className="fw-bold text-success mt-4 mb-2 d-flex align-items-center gap-2">
+                        <span>✅</span> Transaksi Terklasifikasi Wajar / Normal ({arrayHanyaNormal.length} Data)
+                      </h6>
+                      <TableAudit dataRaw={arrayHanyaNormal} isAnomalyTable={false} />
                     </>
                   )}
                 </div>
@@ -448,14 +526,12 @@ const opsiBCG = {
                   {loadingBCG && <div className="text-center my-4"><CSpinner color="warning" /><p className="small text-muted mt-2">AI sedang mengelompokkan profitabilitas produk UMKM-mu...</p></div>}
                   {errorBCG && <CCallout color="danger" className="my-3">{errorBCG}</CCallout>}
 
-                  {/* Tampilan Visual Grafik Scatter */}
                   {!loadingBCG && !errorBCG && (
                     <>
                       <div className="bg-body p-3 rounded border mb-4 shadow-sm" style={{ height: '350px' }}>
                         <Scatter data={dataBCG} options={opsiBCG} />
                       </div>
 
-                      {/* Tabel Detail Produk Hasil Olahan BCG Matrix */}
                       <h6 className="fw-bold text-body mt-4 mb-2">Detail Tabel Klasifikasi Produk</h6>
                       <CTable align="middle" hover bordered responsive>
                         <CTableHead color="light">
@@ -464,7 +540,7 @@ const opsiBCG = {
                             <CTableHeaderCell>Nama Produk</CTableHeaderCell>
                             <CTableHeaderCell>Qty Terjual</CTableHeaderCell>
                             <CTableHeaderCell>Harga Jual</CTableHeaderCell>
-                            <CTableHeaderCell>Zona Kuadran BCG</CTableHeaderCell>
+                            <COptionTableHeaderCell>Zona Kuadran BCG</COptionTableHeaderCell>
                             <CTableHeaderCell>Rekomendasi</CTableHeaderCell>
                           </CTableRow>
                         </CTableHead>
@@ -475,17 +551,13 @@ const opsiBCG = {
                                 <CTableDataCell>{prod.id_produk}</CTableDataCell>
                                 <CTableDataCell className="fw-medium">{prod.nama_produk}</CTableDataCell>
                                 <CTableDataCell>{prod.qty_terjual} pcs</CTableDataCell>
-                                <CTableDataCell>
-                                  Rp {(prod.harga_jual || 0).toLocaleString('id-ID')}
-                                </CTableDataCell>
+                                <CTableDataCell>Rp {(prod.harga_jual || 0).toLocaleString('id-ID')}</CTableDataCell>
                                 <CTableDataCell>
                                   <CBadge color={getBadgeColorBCG(prod.kuadran)}>
                                     {(prod.kuadran || 'UNKNOWN').toUpperCase()}
                                   </CBadge>
                                 </CTableDataCell>
-                                <CTableDataCell>
-                                  {prod.rekomendasi || <span className="text-muted italic">-</span>}
-                                </CTableDataCell>
+                                <CTableDataCell>{prod.rekomendasi || <span className="text-muted italic">-</span>}</CTableDataCell>
                               </CTableRow>
                             ))
                           ) : (
