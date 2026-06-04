@@ -64,6 +64,11 @@ const AnalisisLaporan = () => {
   const [loadingAdvisory, setLoadingAdvisory] = useState(false)
   const [errorAdvisory, setErrorAdvisory] = useState(null)
 
+  // State untuk Anomaly Alert
+  const [dataAnomaly, setDataAnomaly] = useState(null)
+  const [loadingAnomaly, setLoadingAnomaly] = useState(false)
+  const [errorAnomaly, setErrorAnomaly] = useState(null)
+
   // Helper Pembersihan Token JWT
   const getCleanToken = () => {
     const tokenRaw = localStorage.getItem('accessToken')
@@ -138,10 +143,6 @@ const AnalisisLaporan = () => {
   };
 
   const statusObj = dataAI ? getStatusAnalisis(dataAI.status) : { color: 'secondary', label: 'Menunggu' };
-
-  const handleUnduhLaporan = () => {
-    alert('Fitur Unduh Laporan PDF sedang menyiapkan ringkasan analisis finansial warung... 📄📥')
-  }
 
   // KONFIGURASI GRAFIK 1: Cash Flow Forecast
   const nilaiPrediksiBesok = dataAI && dataAI.prediksi_cashflow_besok ? parseFloat(dataAI.prediksi_cashflow_besok) : 0;
@@ -253,11 +254,31 @@ const opsiBCG = {
     return 'secondary';
   }
 
+  const ambilDataAnomaly = async () => {
+    setLoadingAnomaly(true)
+    setErrorAnomaly(null)
+    try {
+      const respon = await API.get('/ai/anomaly')
+      const dataFinal = respon.data.data || respon.data
+      setDataAnomaly(dataFinal) // Akan menyimpan array transaksi hasil prediksi AI
+    } catch (err) {
+      console.error('Gagal memuat Anomaly Alert AI:', err)
+      setErrorAnomaly(err.response?.data?.message || 'Gagal menampilkan deteksi kecurangan bisnis.')
+    } finally {
+      setLoadingAnomaly(false)
+    }
+  }
+
+  const handleUnduhLaporan = () => {
+    alert('Fitur Unduh Laporan PDF sedang menyiapkan ringkasan analisis finansial warung... 📄📥')
+  }
 
    // Trigger effect perpindahan tab
-  useEffect(() => {
+ useEffect(() => {
     if (activeTab === 'forecast') {
       ambilDataForecastAI()
+    } else if (activeTab === 'anomaly') {
+      ambilDataAnomaly()
     } else if (activeTab === 'bcg') {
       ambilDataBCG()
     }
@@ -344,16 +365,76 @@ const opsiBCG = {
                 </div>
               )}
 
-              {/* TAB 2: ANOMALY ALERT */}
+             {/* TAB 2: ANOMALY ALERT */}
               {activeTab === 'anomaly' && (
                 <div>
                   <h6 className="fw-bold text-body mb-1">Notifikasi Otomatis Anomali & Kecurangan Kasir</h6>
-                  <p className="text-body-secondary small mb-4">Sistem mendeteksi transaksi tidak wajar, lonjakan pengeluaran mendadak, atau potensi fraud di warung.</p>
+                  <p className="text-body-secondary small mb-4">Sistem mendeteksi transaksi pengeluaran tidak wajar, lonjakan mendadak, atau potensi fraud di warung berdasarkan baseline mingguan.</p>
                   
-                  <CCallout color="danger" className="bg-body-tertiary mb-3">
-                    <div className="fw-bold text-danger d-flex align-items-center gap-2 mb-1"><CIcon icon={cilWarning} style={{ width: '18px' }} /> Terdeteksi Kebocoran Margin Profit Produk</div>
-                    <span className="text-body small">Produk <strong className="text-body">Permen Kaki</strong> terdeteksi salah input harga. Harga Jual (Rp 1.996) hampir menyamai atau di bawah batas margin aman COGS. Segera periksa modul Produk.</span>
-                  </CCallout>
+                  {loadingAnomaly && (
+                    <div className="text-center my-4">
+                      <CSpinner color="danger" />
+                      <p className="small text-muted mt-2">AI sedang mengaudit riwayat pengeluaran warungmu...</p>
+                    </div>
+                  )}
+
+                  {errorAnomaly && <CCallout color="danger" className="my-3">{errorAnomaly}</CCallout>}
+
+                  {!loadingAnomaly && !errorAnomaly && dataAnomaly && (
+                    <>
+                      {/* Tampilkan Peringatan Bahaya jika ada minimal 1 transaksi berstatus anomali */}
+                      {dataAnomaly.transaksi?.some(t => t.status === 'anomali' || t.is_anomaly === true) && (
+                        <CCallout color="danger" className="bg-body-tertiary mb-4">
+                          <div className="fw-bold text-danger d-flex align-items-center gap-2 mb-1">
+                            <CIcon icon={cilWarning} style={{ width: '18px' }} /> Perhatian: Terdeteksi Transaksi Mencurigakan!
+                          </div>
+                          <span className="text-body small">Sistem mendeteksi adanya pengeluaran dana dengan nilai yang melompati batas normal rata-rata kategori. Segera lakukan audit ulang internal pada baris tabel bertanda merah.</span>
+                        </CCallout>
+                      )}
+
+                      <CTable align="middle" hover bordered responsive>
+                        <CTableHead color="light">
+                          <CTableRow>
+                            <CTableHeaderCell>ID Transaksi</CTableHeaderCell>
+                            <CTableHeaderCell>Kategori</CTableHeaderCell>
+                            <CTableHeaderCell>Nominal Pengeluaran</CTableHeaderCell>
+                            <CTableHeaderCell>Baseline Rata-rata</CTableHeaderCell>
+                            <CTableHeaderCell>Status Audit</CTableHeaderCell>
+                            <CTableHeaderCell>Hasil Analisis Model AI</CTableHeaderCell>
+                          </CTableRow>
+                        </CTableHead>
+                        <CTableBody className="text-body">
+                          {dataAnomaly.transaksi && dataAnomaly.transaksi.length > 0 ? (
+                            dataAnomaly.transaksi.map((trx, index) => {
+                              const isAnomali = trx.status === 'anomali' || trx.is_anomaly === true;
+                              return (
+                                <CTableRow key={index} className={isAnomali ? 'table-danger' : ''}>
+                                  <CTableDataCell className="small fw-semibold">{trx.id_transaksi}</CTableDataCell>
+                                  <CTableDataCell><CBadge color="secondary">{trx.kategori}</CBadge></CTableDataCell>
+                                  <CTableDataCell className="fw-bold">Rp {(trx.nominal || 0).toLocaleString('id-ID')}</CTableDataCell>
+                                  <CTableDataCell className="text-muted small">Rp {(trx.rolling_mean_7d || 0).toLocaleString('id-ID')}</CTableDataCell>
+                                  <CTableDataCell>
+                                    <CBadge color={isAnomali ? 'danger' : 'success'}>
+                                      {isAnomali ? 'ANOMALI' : 'NORMAL'}
+                                    </CBadge>
+                                  </CTableDataCell>
+                                  <CTableDataCell className={`small ${isAnomali ? 'fw-bold text-danger' : 'text-muted'}`}>
+                                    {trx.message || trx.peringatan || (isAnomali ? '⚠️ Pengeluaran melonjak tajam dari batas wajar harian!' : 'Transaksi aman dan tercatat sesuai batas wajar.')}
+                                  </CTableDataCell>
+                                </CTableRow>
+                              );
+                            })
+                          ) : (
+                            <CTableRow>
+                              <CTableDataCell colSpan="6" className="text-center text-muted small py-3">
+                                Tidak ada data pengeluaran yang mencurigakan saat ini. Semua transaksi berjalan normal.
+                              </CTableDataCell>
+                            </CTableRow>
+                          )}
+                        </CTableBody>
+                      </CTable>
+                    </>
+                  )}
                 </div>
               )}
 
