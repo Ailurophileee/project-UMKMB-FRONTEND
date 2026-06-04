@@ -378,7 +378,7 @@ const AnalisisLaporan = () => {
   }
 
   const handleUnduhLaporan = () => {
-    alert('Fitur Unduh Laporan PDF sedang menyiapkan ringkasan analisis finansial warung... 📄📥')
+    window.print();
   }
 
   useEffect(() => {
