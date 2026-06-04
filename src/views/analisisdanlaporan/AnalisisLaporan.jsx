@@ -163,7 +163,7 @@ const TableAudit = ({ dataRaw, isAnomalyTable }) => {
 }
 
 // ==========================================
-// 🏪 MAIN COMPONENT: ANALISIS LAPORAN DASHBOARD
+// MAIN COMPONENT: ANALISIS LAPORAN DASHBOARD
 // ==========================================
 const AnalisisLaporan = () => {
   const [activeTab, setActiveTab] = useState('forecast')
@@ -307,10 +307,10 @@ const AnalisisLaporan = () => {
 
   const dataBCG = {
     datasets: [
-      { label: 'Stars (Andalan Laris)', data: getProdukPerKuadran('star'), backgroundColor: '#2eb85c', pointRadius: 10 },
-      { label: 'Cash Cows (Sapi Perah)', data: getProdukPerKuadran('cash cow'), backgroundColor: '#39f', pointRadius: 10 },
-      { label: 'Question Marks (Potensial)', data: getProdukPerKuadran('question mark'), backgroundColor: '#f9b115', pointRadius: 10 },
-      { label: 'Dogs (Kurang Laku)', data: getProdukPerKuadran('dog'), backgroundColor: '#e55353', pointRadius: 10 }
+      { label: 'Stars', data: getProdukPerKuadran('star'), backgroundColor: '#2eb85c', pointRadius: 10 },
+      { label: 'Cash Cows', data: getProdukPerKuadran('cash cow'), backgroundColor: '#39f', pointRadius: 10 },
+      { label: 'Question Marks', data: getProdukPerKuadran('question mark'), backgroundColor: '#f9b115', pointRadius: 10 },
+      { label: 'Dogs', data: getProdukPerKuadran('dog'), backgroundColor: '#e55353', pointRadius: 10 }
     ]
   }
 
@@ -541,7 +541,7 @@ const AnalisisLaporan = () => {
                             <CTableHeaderCell>Nama Produk</CTableHeaderCell>
                             <CTableHeaderCell>Qty Terjual</CTableHeaderCell>
                             <CTableHeaderCell>Harga Jual</CTableHeaderCell>
-                            <COptionTableHeaderCell>Zona Kuadran BCG</COptionTableHeaderCell>
+                            <CTableHeaderCell>Zona Kuadran BCG</CTableHeaderCell>
                             <CTableHeaderCell>Rekomendasi</CTableHeaderCell>
                           </CTableRow>
                         </CTableHead>
