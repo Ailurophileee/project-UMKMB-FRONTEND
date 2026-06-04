@@ -29,14 +29,8 @@ const AppSidebar = () => {
   const handleLogout = () => {
     console.log('User logged out from Sidebar, clearing token...')
     
-    // 🔥 AKTIFKAN & SESUAIKAN: Hapus token 'accessToken' murni dari localStorage
     localStorage.removeItem('accessToken') 
-    
-    // Beri notifikasi ramah ke pengguna
-    alert('Kamu berhasil keluar. Sampai jumpa lagi! 👋')
-    
-    // Tendang balik ke halaman login secara bersih
-    navigate('/login', { replace: true }) 
+    navigate('/', { replace: true }) 
   }
 
   return (
