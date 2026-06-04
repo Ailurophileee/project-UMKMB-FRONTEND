@@ -22,7 +22,8 @@ import {
   CFormSelect
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilCloudDownload, cilGraph, cilWarning, cilChartPie, cilChevronCircleUp, cilChevronCircleDown } from '@coreui/icons'
+// Ganti baris import nomor 4 menjadi ini:
+import { cilCloudDownload, cilGraph, cilWarning, cilChartPie, cilChevronTop, cilChevronBottom } from '@coreui/icons'
 import API from '../../utils/api'
 
 import {
@@ -95,7 +96,7 @@ const TableAudit = ({ dataRaw, isAnomalyTable }) => {
             onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
             className="d-flex align-items-center gap-1"
           >
-            <CIcon icon={sortOrder === 'desc' ? cilChevronCircleDown : cilChevronCircleUp} />
+            <CIcon icon={sortOrder === 'desc' ? cilChevronBottom : cilChevronTop} />
             {sortOrder === 'desc' ? 'Terbesar' : 'Terkecil'}
           </CButton>
         </CCol>
