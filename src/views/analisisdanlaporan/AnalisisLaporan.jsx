@@ -377,10 +377,6 @@ const AnalisisLaporan = () => {
     }
   }
 
-  const handleUnduhLaporan = () => {
-    window.print();
-  }
-
   useEffect(() => {
     if (activeTab === 'forecast') {
       ambilDataForecastAI()
@@ -391,7 +387,6 @@ const AnalisisLaporan = () => {
     }
   }, [activeTab])
 
-  // 🔔 MEMISAHKAN DATA ANOMALI VS NORMAL UTK TABEL TERPISAH
   const listHasilAnomalyAll = dataAnomaly?.hasil || []
   const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === 1)
   const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly !== 1)
@@ -402,9 +397,6 @@ const AnalisisLaporan = () => {
         <CCard className="mb-4 shadow-sm">
           <CCardHeader className="d-flex justify-content-between align-items-center py-3 bg-body-tertiary text-body border-bottom">
             <h5 className="fw-bold mb-0">Pusat Analisis & Laporan AI</h5>
-            <CButton color="primary" size="sm" className="d-flex align-items-center gap-2" onClick={handleUnduhLaporan}>
-              <CIcon icon={cilCloudDownload} /> Unduh Laporan Ringkas
-            </CButton>
           </CCardHeader>
 
           <CCardBody className="p-4">
@@ -502,13 +494,13 @@ const AnalisisLaporan = () => {
                         </CCallout>
                       )}
 
-                      {/* 🚨 TABEL 1: KHUSUS DATA YANG TERDETEKSI ANOMALI (ATAS) */}
+                      {/* TABEL 1: KHUSUS DATA YANG TERDETEKSI ANOMALI (ATAS) */}
                       <h6 className="fw-bold text-danger mb-2 d-flex align-items-center gap-2">
                         <span>🚨</span> Transaksi Terindikasi Anomali ({arrayHanyaAnomali.length} Data)
                       </h6>
                       <TableAudit dataRaw={arrayHanyaAnomali} isAnomalyTable={true} />
 
-                      {/* 🍏 TABEL 2: KHUSUS DATA YANG BERSTATUS NORMAL (BAWAH) */}
+                      {/*  TABEL 2: KHUSUS DATA YANG BERSTATUS NORMAL (BAWAH) */}
                       <h6 className="fw-bold text-success mt-4 mb-2 d-flex align-items-center gap-2">
                         <span>✅</span> Transaksi Terklasifikasi Wajar / Normal ({arrayHanyaNormal.length} Data)
                       </h6>
