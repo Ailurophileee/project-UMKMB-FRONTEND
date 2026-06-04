@@ -20,7 +20,12 @@ const LandingPage = () => {
       <nav className="navbar navbar-light bg-white border-bottom py-3 shadow-sm sticky-top">
         <CContainer fluid="md" className="d-flex justify-content-between align-items-center">
           <span className="navbar-brand fw-bold text-primary fs-4 mb-0">
-            🏪 UMKM Bersama
+            <img 
+              src="/icon.ico" 
+              alt="Logo UMKM Bersama" 
+              style={{ width: '35px', height: '35px', objectFit: 'contain' }} 
+            />
+            UMKM Bersama
           </span>
           <CButton color="primary" className="fw-semibold" onClick={() => navigate('/login')}>
             Masuk Aplikasi
@@ -46,12 +51,71 @@ const LandingPage = () => {
                 </CButton>
               </div>
             </CCol>
-            <CCol md={5} className="text-center d-none d-md-block">
-              {/* Ilustrasi Visual Representatif */}
-              <div className="bg-body-tertiary p-5 rounded-circle shadow-inner mx-auto border d-flex align-items-center justify-content-center" style={{ width: '320px', height: '320px' }}>
-                <span style={{ fontSize: '120px' }}>📊</span>
-              </div>
-            </CCol>
+           <CCol md={5} className="text-center d-none d-md-block position-relative">
+  {/* Bingkai Luar Mockup Aplikasi */}
+  <div 
+    className="bg-white border rounded-4 shadow-lg p-3 mx-auto text-start position-relative overflow-hidden" 
+    style={{ width: '380px', transform: 'rotate(-2deg)', transition: 'transform 0.3s' }}
+  >
+    {/* Header Mini Mockup (Titik Window Mac Style) */}
+    <div className="d-flex gap-1.5 mb-3 border-bottom pb-2">
+      <span className="bg-danger rounded-circle d-inline-block" style={{ width: '10px', height: '10px' }}></span>
+      <span className="bg-warning rounded-circle d-inline-block" style={{ width: '10px', height: '10px', marginLeft: '4px' }}></span>
+      <span className="bg-success rounded-circle d-inline-block" style={{ width: '10px', height: '10px', marginLeft: '4px' }}></span>
+      <span className="text-muted small ms-2" style={{ fontSize: '10px', transform: 'translateY(-3px)' }}>umkm-bersama-dashboard</span>
+    </div>
+
+    {/* Konten Utama Mockup Dashboard Mini */}
+    <div className="row g-2">
+      {/* Kartu Finansial Mini */}
+      <div className="col-12">
+        <div className="p-2 border rounded-3 bg-light">
+          <div className="text-muted small" style={{ fontSize: '10px' }}>Total Pendapatan Warung</div>
+          <div className="fw-bold text-success d-flex align-items-center gap-1" style={{ fontSize: '14px' }}>
+            Rp 14.250.000 <span className="text-success" style={{ fontSize: '10px' }}>↑ 12%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Replikasi Grafik Forecast Mini */}
+      <div className="col-12">
+        <div className="p-2 border rounded-3 bg-white">
+          <div className="text-muted small mb-2" style={{ fontSize: '10px' }}>📊 Cash Flow Forecast (LSTM)</div>
+          <div className="d-flex align-items-end justify-content-between pt-2 px-1" style={{ height: '70px' }}>
+            <div className="bg-primary rounded-top opacity-25" style={{ width: '12%', height: '40%' }}></div>
+            <div className="bg-primary rounded-top opacity-50" style={{ width: '12%', height: '60%' }}></div>
+            <div className="bg-primary rounded-top opacity-50" style={{ width: '12%', height: '55%' }}></div>
+            <div className="bg-primary rounded-top opacity-75" style={{ width: '12%', height: '75%' }}></div>
+            <div className="bg-primary rounded-top" style={{ width: '12%', height: '95%' }}></div>
+            <div className="bg-primary rounded-top border-2 border-primary-emphasis" style={{ width: '12%', height: '85%', borderStyle: 'dashed' }}></div>
+            <div className="bg-primary rounded-top border-2 border-primary-emphasis" style={{ width: '12%', height: '90%', borderStyle: 'dashed' }}></div>
+          </div>
+          <div className="text-center text-primary-emphasis fw-semibold mt-1" style={{ fontSize: '9px' }}>Prediksi Kas Esok Hari</div>
+        </div>
+      </div>
+
+      {/* Replikasi Alert Anomali Mini */}
+      <div className="col-12">
+        <div className="p-2 border border-danger-subtle bg-danger bg-opacity-10 rounded-3 text-danger d-flex align-items-center justify-content-between shadow-sm">
+          <div className="d-flex align-items-center gap-2">
+            <span style={{ fontSize: '14px' }}>🚨</span>
+            <div>
+              <div className="fw-bold" style={{ fontSize: '10px' }}>Anomaly Alert (Isolation Forest)</div>
+              <div style={{ fontSize: '9px', opacity: 0.8 }}>Overhead: Biaya Operasional Bengkak</div>
+            </div>
+          </div>
+          <span className="badge bg-danger text-white rounded-pill" style={{ fontSize: '8px' }}>Fraud Terdeteksi</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Ornamen Lingkaran Estetik di Belakang Mockup */}
+  <div 
+    className="position-absolute bg-primary bg-opacity-10 rounded-circle z-n1" 
+    style={{ width: '300px', height: '300px', top: '10%', right: '10%', filter: 'blur(20px)' }}
+  ></div>
+</CCol>
           </CRow>
         </CContainer>
       </header>
@@ -117,7 +181,7 @@ const LandingPage = () => {
       <footer className="bg-white border-top py-4 text-center">
         <CContainer fluid="md">
           <p className="text-body-secondary small mb-0">
-            &copy; 2026 <strong>UMKM Bersama Dashboard</strong>. Capstone Project Full-Stack & AI Integration. All Rights Reserved.
+            &copy; 2026 <strong>UMKM Bersama Dashboard</strong>. Capstone Project . All Rights Reserved.
           </p>
         </CContainer>
       </footer>
