@@ -19,7 +19,7 @@ const Login = React.lazy(() => import('./views/pages/login/Login'))
 const Register = React.lazy(() => import('./views/pages/register/Register'))
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
-
+const LandingPage =React.lazy(() => import('./views/landingPage/landingpage'))
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
@@ -49,6 +49,7 @@ const App = () => {
       >
         <Routes>
           {/* Halaman Publik (Bisa diakses siapa saja tanpa login) */}
+          <Route exact path="/" name="Landing Page" element={<LandingPage />} />
           <Route exact path="/login" name="Login Page" element={<Login />} />
           <Route exact path="/register" name="Register Page" element={<Register />} />
           <Route exact path="/404" name="Page 404" element={<Page404 />} />
