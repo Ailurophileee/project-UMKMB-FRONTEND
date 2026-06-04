@@ -15,17 +15,18 @@ const LandingPage = () => {
   const navigate = useNavigate()
 
   return (
-    <div className="bg-light min-vh-100 text-dark overflow-x-hidden">
+    <div className="bg-body min-vh-100 text-body overflow-x-hidden">
+      
       {/* 1. NAVBAR MINI */}
-      <nav className="navbar navbar-light bg-white border-bottom py-3 shadow-sm sticky-top">
+      <nav className="navbar border-bottom py-3 shadow-sm sticky-top bg-body">
         <CContainer fluid="md" className="d-flex justify-content-between align-items-center">
-          <span className="navbar-brand fw-bold text-primary fs-4 mb-0">
-           <img 
+          <span className="navbar-brand fw-bold text-primary fs-4 mb-0 d-flex align-items-center gap-2">
+            <img 
               src="/icon.ico" 
               alt="Logo UMKM Bersama" 
               style={{ width: '48px', height: '48px', objectFit: 'contain' }} 
             />
-            UMKM Bersama
+            <span className="text-body">UMKM Bersama</span>
           </span>
           <CButton color="primary" className="fw-semibold" onClick={() => navigate('/login')}>
             Masuk Aplikasi
@@ -34,7 +35,7 @@ const LandingPage = () => {
       </nav>
 
       {/* 2. HERO SECTION */}
-      <header className="py-5 bg-white border-bottom">
+      <header className="py-5 border-bottom">
         <CContainer fluid="md" className="py-5 text-center text-md-start">
           <CRow className="align-items-center g-5">
             <CCol md={7}>
@@ -51,10 +52,11 @@ const LandingPage = () => {
                 </CButton>
               </div>
             </CCol>
-           <CCol md={5} className="text-center d-none d-md-block position-relative">
+            
+            <CCol md={5} className="text-center d-none d-md-block position-relative">
               {/* Bingkai Luar Mockup Aplikasi */}
               <div 
-                className="bg-white border rounded-4 shadow-lg p-3 mx-auto text-start position-relative overflow-hidden" 
+                className="bg-body border rounded-4 shadow-lg p-3 mx-auto text-start position-relative overflow-hidden" 
                 style={{ width: '380px', transform: 'rotate(-2deg)', transition: 'transform 0.3s' }}
               >
                 {/* Header Mini Mockup (Titik Window Mac Style) */}
@@ -62,15 +64,15 @@ const LandingPage = () => {
                   <span className="bg-danger rounded-circle d-inline-block" style={{ width: '10px', height: '10px' }}></span>
                   <span className="bg-warning rounded-circle d-inline-block" style={{ width: '10px', height: '10px', marginLeft: '4px' }}></span>
                   <span className="bg-success rounded-circle d-inline-block" style={{ width: '10px', height: '10px', marginLeft: '4px' }}></span>
-                  <span className="text-muted small ms-2" style={{ fontSize: '10px', transform: 'translateY(-3px)' }}>umkm-bersama-dashboard</span>
+                  <span className="text-body-secondary small ms-2" style={{ fontSize: '10px', transform: 'translateY(-3px)' }}>umkm-bersama-dashboard</span>
                 </div>
 
                 {/* Konten Utama Mockup Dashboard Mini */}
                 <div className="row g-2">
                   {/* Kartu Finansial Mini */}
                   <div className="col-12">
-                    <div className="p-2 border rounded-3 bg-light">
-                      <div className="text-muted small" style={{ fontSize: '10px' }}>Total Pendapatan Warung</div>
+                    <div className="p-2 border rounded-3 bg-body-tertiary">
+                      <div className="text-body-secondary small" style={{ fontSize: '10px' }}>Total Pendapatan Warung</div>
                       <div className="fw-bold text-success d-flex align-items-center gap-1" style={{ fontSize: '14px' }}>
                         Rp 14.250.000 <span className="text-success" style={{ fontSize: '10px' }}>↑ 12%</span>
                       </div>
@@ -79,8 +81,8 @@ const LandingPage = () => {
 
                   {/* Replikasi Grafik Forecast Mini */}
                   <div className="col-12">
-                    <div className="p-2 border rounded-3 bg-white">
-                      <div className="text-muted small mb-2" style={{ fontSize: '10px' }}>📊 Cash Flow Forecast (LSTM)</div>
+                    <div className="p-2 border rounded-3 bg-body">
+                      <div className="text-body-secondary small mb-2" style={{ fontSize: '10px' }}>📊 Cash Flow Forecast (LSTM)</div>
                       <div className="d-flex align-items-end justify-content-between pt-2 px-1" style={{ height: '70px' }}>
                         <div className="bg-primary rounded-top opacity-25" style={{ width: '12%', height: '40%' }}></div>
                         <div className="bg-primary rounded-top opacity-50" style={{ width: '12%', height: '60%' }}></div>
@@ -90,7 +92,7 @@ const LandingPage = () => {
                         <div className="bg-primary rounded-top border-2 border-primary-emphasis" style={{ width: '12%', height: '85%', borderStyle: 'dashed' }}></div>
                         <div className="bg-primary rounded-top border-2 border-primary-emphasis" style={{ width: '12%', height: '90%', borderStyle: 'dashed' }}></div>
                       </div>
-                      <div className="text-center text-primary-emphasis fw-semibold mt-1" style={{ fontSize: '9px' }}>Prediksi Kas Esok Hari</div>
+                      <div className="text-center text-primary fw-semibold mt-1" style={{ fontSize: '9px' }}>Prediksi Kas Esok Hari</div>
                     </div>
                   </div>
 
@@ -131,7 +133,7 @@ const LandingPage = () => {
           <CRow className="g-4">
             {/* FITUR 1 */}
             <CCol md={4}>
-              <CCard className="h-100 border-0 shadow-sm rounded-4">
+              <CCard className="h-100 border-0 bg-body shadow-sm rounded-4">
                 <CCardBody className="p-4 text-center text-md-start">
                   <div className="bg-primary bg-opacity-10 text-primary p-3 rounded-3 d-inline-block mb-3">
                     <CIcon icon={cilGraph} size="xl" />
@@ -146,7 +148,7 @@ const LandingPage = () => {
 
             {/* FITUR 2 */}
             <CCol md={4}>
-              <CCard className="h-100 border-0 shadow-sm rounded-4table-danger">
+              <CCard className="h-100 border-0 bg-body shadow-sm rounded-4">
                 <CCardBody className="p-4 text-center text-md-start">
                   <div className="bg-danger bg-opacity-10 text-danger p-3 rounded-3 d-inline-block mb-3">
                     <CIcon icon={cilWarning} size="xl" />
@@ -161,7 +163,7 @@ const LandingPage = () => {
 
             {/* FITUR 3 */}
             <CCol md={4}>
-              <CCard className="h-100 border-0 shadow-sm rounded-4">
+              <CCard className="h-100 border-0 bg-body shadow-sm rounded-4">
                 <CCardBody className="p-4 text-center text-md-start">
                   <div className="bg-warning bg-opacity-10 text-warning p-3 rounded-3 d-inline-block mb-3">
                     <CIcon icon={cilChartPie} size="xl" />
@@ -178,10 +180,10 @@ const LandingPage = () => {
       </section>
 
       {/* 4. FOOTER */}
-      <footer className="bg-white border-top py-4 text-center">
+      <footer className="bg-body border-top py-4 text-center">
         <CContainer fluid="md">
           <p className="text-body-secondary small mb-0">
-            &copy; 2026 <strong>UMKM Bersama Dashboard</strong>. Capstone Project . All Rights Reserved.
+            &copy; 2026 <strong>UMKM Bersama Dashboard</strong>. Capstone Project. All Rights Reserved.
           </p>
         </CContainer>
       </footer>
