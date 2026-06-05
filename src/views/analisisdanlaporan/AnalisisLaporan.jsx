@@ -133,7 +133,7 @@ const TableAudit = ({ dataRaw, isAnomalyTable }) => {
                 <CTableDataCell className="small fw-semibold">{trx.id_transaksi}</CTableDataCell>
                 <CTableDataCell><CBadge color="secondary">{trx.kategori}</CBadge></CTableDataCell>
                 <CTableDataCell className="fw-bold">Rp {(trx.nominal || 0).toLocaleString('id-ID')}</CTableDataCell>
-                <CTableDataCell className="text-muted small">{(trx.anomaly_score * 100).toFixed(1)}%</CTableDataCell>
+                <CTableDataCell className="text-muted small">{trx.baseline_rata_rata || '0.0%'}</CTableDataCell>
                 <CTableDataCell>
                   <CBadge color={isAnomalyTable ? 'danger' : 'success'}>
                     {isAnomalyTable ? 'ANOMALI' : 'NORMAL'}
@@ -385,10 +385,17 @@ const AnalisisLaporan = () => {
     }
   }, [activeTab])
 
-  const listHasilAnomalyAll = dataAnomaly?.hasil || []
-  const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === 1)
-  const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly !== 1)
-
+  //const listHasilAnomalyAll = dataAnomaly?.hasil || []
+  //const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === 1)
+  //const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly !== 1)
+  // --- GANTI SEKTOR INI ---
+  // Membaca array dari properti 'anomali' hasil return terstandardisasi backend kita
+  const listHasilAnomalyAll = dataAnomaly?.anomali || dataAnomaly?.hasil || []
+  
+  // Filter akurat berdasarkan string 'ANOMALI'/'NORMAL' dari backend controller kamu
+  const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.status_audit === 'ANOMALI' || t.is_anomaly === 1)
+  const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.status_audit === 'NORMAL' || t.is_anomaly !== 1)
+  // ------------------------
   return (
     <CRow>
       <CCol xs={12}>
