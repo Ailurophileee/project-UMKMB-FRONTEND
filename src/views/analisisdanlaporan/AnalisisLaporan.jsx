@@ -398,7 +398,7 @@ const AnalisisLaporan = () => {
     }
   }, [activeTab])
 
-  const listHasilAnomalyAll = dataAnomaly?.hasil || [];
+  const listHasilAnomalyAll = dataAnomaly?.anomali || [];
   // Menyaring data murni dan tegas berdasarkan status_audit dari backend baru kita
 const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.status_audit === 'ANOMALI');
 const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.status_audit === 'NORMAL');
