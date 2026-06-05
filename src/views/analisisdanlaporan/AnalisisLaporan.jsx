@@ -359,13 +359,23 @@ const AnalisisLaporan = () => {
     return 'secondary';
   }
 
-  // INTERAKSI API 3: HIT API ROUTER ANOMALY ALERT
+  // INTERAKSI API 3: HIT API ROUTER ANOMALY ALERT (VERSI AMAN SINKRON)
   const ambilDataAnomaly = async () => {
     setLoadingAnomaly(true)
     setErrorAnomaly(null)
     try {
+      const tokenBersih = getCleanToken()
+      if (!tokenBersih) {
+        setErrorAnomaly('Sesi login tidak ditemukan.')
+        return
+      }
+
       const respon = await API.get('/ai/anomaly')
+      
+      // Ambil data murni dari bungkusan standar utilitas response backend ({ code, status, message, data })
       const dataFinal = respon.data.data || respon.data
+      
+      // Simpan objek utuh (yang berisi properti .anomali) ke dalam state
       setDataAnomaly(dataFinal) 
     } catch (err) {
       console.error('Gagal memuat Anomaly Alert AI:', err)
