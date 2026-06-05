@@ -376,14 +376,9 @@ const AnalisisLaporan = () => {
         return
       }
 
-      const respon = await API.get('/ai/anomaly')
-      
-      console.log("=== RESPONS MURNI BACKEND ===", respon.data);
+    const respon = await API.get('/ai/anomaly')
     
     const dataFinal = respon.data.data || respon.data
-    
-    console.log("=== DATA SETELAH DI-EXTRACT ===", dataFinal);
-      // Simpan objek utuh (yang berisi properti .anomali) ke dalam state
       setDataAnomaly(dataFinal) 
     } catch (err) {
       console.error('Gagal memuat Anomaly Alert AI:', err)
