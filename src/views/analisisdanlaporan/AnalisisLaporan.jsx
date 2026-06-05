@@ -279,19 +279,25 @@ const AnalisisLaporan = () => {
         return
       }
 
-      // Endpoint sesuai route BE: GET /ai/anomaly
       const respon = await API.get('/ai/anomaly')
 
-      // BE membungkus response dengan utility response() → { status, message, data: {...} }
+      // BE membungkus dengan utility response() → { status, message, data: {...} }
       const dataFinal = respon.data.data || respon.data
 
-      // DEBUG sementara — hapus setelah struktur AI dikonfirmasi
-      console.log('[ANOMALY] dataFinal keys:', Object.keys(dataFinal || {}))
-      console.log('[ANOMALY] dataFinal sample:', JSON.stringify(dataFinal).slice(0, 300))
+      // BE baru mengembalikan key 'anomali' yang sudah dinormalisasi.
+      let listTransaksi = dataFinal?.anomali || []
 
-      // BE baru sudah melakukan normalisasi status_audit di server,
-      // sehingga FE cukup ambil langsung dari field anomali
-      const listTransaksi = dataFinal?.anomali || []
+      // Fallback: jika BE lama masih dipakai dan AI response lolos langsung ke FE
+      // AI response memakai key 'hasil' dan is_anomaly integer (0/1)
+      if (listTransaksi.length === 0 && dataFinal?.hasil) {
+        listTransaksi = (dataFinal.hasil).map(item => ({
+          ...item,
+          rasio_vs_baseline : item.rasio_vs_baseline || 1,
+          rolling_mean_7d   : item.rolling_mean_7d   || 0,
+          status_audit      : Number(item.is_anomaly) === 1 ? 'ANOMALI' : 'NORMAL',
+          pesan             : item.pesan_anomali || item.pesan || null,
+        }))
+      }
 
       setDataAnomaly({
         anomali          : listTransaksi,
@@ -416,12 +422,10 @@ const AnalisisLaporan = () => {
     return 'secondary'
   }
 
-  // DIPERBARUI: Pisahkan data anomali dan normal berdasarkan status_audit yang sudah dinormalisasi
   const listHasilAnomalyAll = dataAnomaly?.anomali || []
   const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.status_audit === 'ANOMALI')
   const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.status_audit === 'NORMAL')
 
-  // DIPERBARUI: Hitung total nilai anomali untuk ringkasan
   const totalNilaiAnomali = arrayHanyaAnomali.reduce((sum, t) => sum + (t.nominal || 0), 0)
 
   return (
@@ -554,7 +558,6 @@ const AnalisisLaporan = () => {
                             Sistem mendeteksi pengeluaran dengan rasio jauh melampaui baseline rata-rata
                             7 hari per kategori. Segera lakukan audit ulang internal pada baris tabel bertanda merah.
                           </span>
-                          {/* DIPERBARUI: Tampilkan pesan peringatan dari model AI jika ada */}
                           {dataAnomaly.pesan_peringatan?.length > 0 && (
                             <ul className="mt-2 mb-0 small text-danger">
                               {dataAnomaly.pesan_peringatan.map((msg, i) => (

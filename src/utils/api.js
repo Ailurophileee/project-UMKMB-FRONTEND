@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
- // baseURL: 'http://localhost:5000/api', // sesuaikan dengan base URL backend-mu
+ //baseURL: 'http://localhost:5000/api', // sesuaikan dengan base URL backend-mu
  baseURL: import.meta.env.VITE_API_URL || 'project-umkmb-backend-production.up.railway.app/api'
 });
 
@@ -21,8 +21,6 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response, // Jika request sukses, teruskan saja
   (error) => {
-    // 💡 CEK: Apakah error ini berasal dari rute /authentication (Login)?
-    // Jika iya, jangan ditendang ke /login agar pesan salah password bisa muncul!
     const isRouteLogin = error.config?.url?.includes('/authentication');
 
     if (!isRouteLogin && error.response && (error.response.status === 401 || error.response.status === 403)) {
