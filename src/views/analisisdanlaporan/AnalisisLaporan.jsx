@@ -134,9 +134,8 @@ const TableAudit = ({ dataRaw, isAnomalyTable }) => {
       <CTableDataCell><CBadge color="secondary">{trx.kategori}</CBadge></CTableDataCell>
       <CTableDataCell className="fw-bold">Rp {(trx.nominal || 0).toLocaleString('id-ID')}</CTableDataCell>
       
-      {/* 1. DISESUAIKAN: Menggunakan rolling_mean_7d dan diformat ke Rupiah */}
       <CTableDataCell className="text-muted small">
-        Rp {(trx.rolling_mean_7d || 0).toLocaleString('id-ID')}
+        {trx.baseline_rata_rata || '100.0%'}
       </CTableDataCell>
       
       <CTableDataCell>
@@ -404,31 +403,11 @@ const AnalisisLaporan = () => {
     }
   }, [activeTab])
 
-  //const listHasilAnomalyAll = dataAnomaly?.hasil || []
-  //const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === 1)
-  //const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly !== 1)
-
-  // --- SEKTOR SEBELUM RETURN PADA ANALISIS LAPORAN (VERSI FIX KEBHAL TIPE DATA) ---
-const listHasilAnomalyAll = dataAnomaly?.anomali || dataAnomaly?.transaksi || dataAnomaly?.hasil || [];
-
-// Filter fleksibel: mengecek tipe Boolean, Integer, maupun String dari tim DS
-const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => {
-  if (t.is_anomaly === true || t.is_anomaly === 1) return true;
-  if (String(t.is_anomaly).toLowerCase() === 'true' || String(t.is_anomaly) === '1') return true;
-  if (String(t.status_audit).toUpperCase() === 'ANOMALI') return true;
-  return false;
-});
-
-const arrayHanyaNormal = listHasilAnomalyAll.filter(t => {
-  if (t.is_anomaly === false || t.is_anomaly === 0) return true;
-  if (String(t.is_anomaly).toLowerCase() === 'false' || String(t.is_anomaly) === '0') return true;
-  if (String(t.status_audit).toUpperCase() === 'NORMAL') return true;
-  // Jika field is_anomaly tidak terdefinisi, masukkan ke kategori normal agar tabel tidak kosong mendadak
-  if (t.is_anomaly === undefined && t.status_audit === undefined) return true; 
-  return false;
-});
-// ---------------------------------------------------------------------------------
-
+  const listHasilAnomalyAll = dataAnomaly?.hasil || [];
+  // Menyaring data murni dan tegas berdasarkan status_audit dari backend baru kita
+const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.status_audit === 'ANOMALI');
+const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.status_audit === 'NORMAL');
+ 
   return (
     <CRow>
       <CCol xs={12}>
