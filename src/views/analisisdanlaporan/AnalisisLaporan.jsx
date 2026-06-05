@@ -379,9 +379,11 @@ const AnalisisLaporan = () => {
 
       const respon = await API.get('/ai/anomaly')
       
-      // Ambil data murni dari bungkusan standar utilitas response backend ({ code, status, message, data })
-      const dataFinal = respon.data.data || respon.data
-      
+      console.log("=== RESPONS MURNI BACKEND ===", respon.data);
+    
+    const dataFinal = respon.data.data || respon.data
+    
+    console.log("=== DATA SETELAH DI-EXTRACT ===", dataFinal);
       // Simpan objek utuh (yang berisi properti .anomali) ke dalam state
       setDataAnomaly(dataFinal) 
     } catch (err) {
@@ -405,12 +407,28 @@ const AnalisisLaporan = () => {
   //const listHasilAnomalyAll = dataAnomaly?.hasil || []
   //const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === 1)
   //const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly !== 1)
-  // --- SEKTOR SEBELUM RETURN PADA ANALISIS LAPORAN ---
-  const listHasilAnomalyAll = dataAnomaly?.transaksi || dataAnomaly?.anomali || [];
 
-  // Filter akurat berdasarkan properti biner is_anomaly dari output Isolation Forest
-  const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === true || t.is_anomaly === 1);
-  const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly === false || t.is_anomaly === 0);
+  // --- SEKTOR SEBELUM RETURN PADA ANALISIS LAPORAN (VERSI FIX KEBHAL TIPE DATA) ---
+const listHasilAnomalyAll = dataAnomaly?.anomali || dataAnomaly?.transaksi || dataAnomaly?.hasil || [];
+
+// Filter fleksibel: mengecek tipe Boolean, Integer, maupun String dari tim DS
+const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => {
+  if (t.is_anomaly === true || t.is_anomaly === 1) return true;
+  if (String(t.is_anomaly).toLowerCase() === 'true' || String(t.is_anomaly) === '1') return true;
+  if (String(t.status_audit).toUpperCase() === 'ANOMALI') return true;
+  return false;
+});
+
+const arrayHanyaNormal = listHasilAnomalyAll.filter(t => {
+  if (t.is_anomaly === false || t.is_anomaly === 0) return true;
+  if (String(t.is_anomaly).toLowerCase() === 'false' || String(t.is_anomaly) === '0') return true;
+  if (String(t.status_audit).toUpperCase() === 'NORMAL') return true;
+  // Jika field is_anomaly tidak terdefinisi, masukkan ke kategori normal agar tabel tidak kosong mendadak
+  if (t.is_anomaly === undefined && t.status_audit === undefined) return true; 
+  return false;
+});
+// ---------------------------------------------------------------------------------
+
   return (
     <CRow>
       <CCol xs={12}>
