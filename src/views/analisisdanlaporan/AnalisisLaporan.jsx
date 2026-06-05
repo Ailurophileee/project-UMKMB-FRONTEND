@@ -127,24 +127,31 @@ const TableAudit = ({ dataRaw, isAnomalyTable }) => {
           </CTableRow>
         </CTableHead>
         <CTableBody className="text-body">
-          {dataDisplayed.length > 0 ? (
-            dataDisplayed.map((trx, index) => (
-              <CTableRow key={index} className={isAnomalyTable ? 'table-danger' : ''}>
-                <CTableDataCell className="small fw-semibold">{trx.id_transaksi}</CTableDataCell>
-                <CTableDataCell><CBadge color="secondary">{trx.kategori}</CBadge></CTableDataCell>
-                <CTableDataCell className="fw-bold">Rp {(trx.nominal || 0).toLocaleString('id-ID')}</CTableDataCell>
-                <CTableDataCell className="text-muted small">{trx.baseline_rata_rata || '0.0%'}</CTableDataCell>
-                <CTableDataCell>
-                  <CBadge color={isAnomalyTable ? 'danger' : 'success'}>
-                    {isAnomalyTable ? 'ANOMALI' : 'NORMAL'}
-                  </CBadge>
-                </CTableDataCell>
-                <CTableDataCell className={`small ${isAnomalyTable ? 'fw-bold text-danger' : 'text-muted'}`}>
-                  {trx.pesan_anomali || (isAnomalyTable ? '⚠️ Pengeluaran melonjak tajam dari batas wajar harian!' : 'Transaksi aman dan tercatat sesuai batas wajar.')}
-                </CTableDataCell>
-              </CTableRow>
-            ))
-          ) : (
+         {dataDisplayed.length > 0 ? (
+  dataDisplayed.map((trx, index) => (
+    <CTableRow key={index} className={isAnomalyTable ? 'table-danger' : ''}>
+      <CTableDataCell className="small fw-semibold">{trx.id_transaksi}</CTableDataCell>
+      <CTableDataCell><CBadge color="secondary">{trx.kategori}</CBadge></CTableDataCell>
+      <CTableDataCell className="fw-bold">Rp {(trx.nominal || 0).toLocaleString('id-ID')}</CTableDataCell>
+      
+      {/* 1. DISESUAIKAN: Menggunakan rolling_mean_7d dan diformat ke Rupiah */}
+      <CTableDataCell className="text-muted small">
+        Rp {(trx.rolling_mean_7d || 0).toLocaleString('id-ID')}
+      </CTableDataCell>
+      
+      <CTableDataCell>
+        <CBadge color={isAnomalyTable ? 'danger' : 'success'}>
+          {isAnomalyTable ? 'ANOMALI' : 'NORMAL'}
+        </CBadge>
+      </CTableDataCell>
+      
+      {/* 2. DISESUAIKAN: Menggunakan properti pesan / warning dari model AI DS */}
+      <CTableDataCell className={`small ${isAnomalyTable ? 'fw-bold text-danger' : 'text-muted'}`}>
+        {trx.pesan || trx.warning || (isAnomalyTable ? '⚠️ Pengeluaran melonjak tajam dari batas wajar harian!' : 'Transaksi aman dan tercatat sesuai batas wajar.')}
+      </CTableDataCell>
+    </CTableRow>
+  ))
+) : (
             <CTableRow>
               <CTableDataCell colSpan="6" className="text-center text-muted small py-3">
                 Tidak ada data transaksi yang cocok dengan kriteria filter.
@@ -398,14 +405,12 @@ const AnalisisLaporan = () => {
   //const listHasilAnomalyAll = dataAnomaly?.hasil || []
   //const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === 1)
   //const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly !== 1)
-  // --- GANTI SEKTOR INI ---
-  // Membaca array dari properti 'anomali' hasil return terstandardisasi backend kita
-  const listHasilAnomalyAll = dataAnomaly?.anomali || dataAnomaly?.hasil || []
-  
-  // Filter akurat berdasarkan string 'ANOMALI'/'NORMAL' dari backend controller kamu
-  const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.status_audit === 'ANOMALI' || t.is_anomaly === 1)
-  const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.status_audit === 'NORMAL' || t.is_anomaly !== 1)
-  // ------------------------
+  // --- SEKTOR SEBELUM RETURN PADA ANALISIS LAPORAN ---
+  const listHasilAnomalyAll = dataAnomaly?.transaksi || dataAnomaly?.anomali || [];
+
+  // Filter akurat berdasarkan properti biner is_anomaly dari output Isolation Forest
+  const arrayHanyaAnomali = listHasilAnomalyAll.filter(t => t.is_anomaly === true || t.is_anomaly === 1);
+  const arrayHanyaNormal = listHasilAnomalyAll.filter(t => t.is_anomaly === false || t.is_anomaly === 0);
   return (
     <CRow>
       <CCol xs={12}>
